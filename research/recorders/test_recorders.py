@@ -95,6 +95,51 @@ class TestGeminiTrades(unittest.TestCase):
         self.assertTrue(any(u.path.startswith(p + "/") for p in R.P.ALLOWED["api.gemini.com"]))
 
 
+class TestBooks(unittest.TestCase):
+    def test_kalshi_depth_best_first_and_empty_side(self):
+        b = {"orderbook_fp": {"yes_dollars": [["0.9400", "10.00"], ["0.9600", "5.00"], ["0.9500", "0"]],
+                              "no_dollars": []}}
+        rows = R.kalshi_depth_rows([("T", 1.0, b)], "ts")
+        self.assertEqual([(r["level"], r["price"], r["qty"]) for r in rows],
+                         [(0, 0.96, 5.0), (1, 0.94, 10.0)])        # zero-size level dropped, no NO rows
+
+    def test_kalshi_deep_band(self):
+        self.assertTrue(R.kx_deep({"yes_bid_dollars": "0.9300", "yes_ask_dollars": "0.9500"}))
+        self.assertTrue(R.kx_deep({"yes_bid_dollars": "0.0300", "yes_ask_dollars": "0.0500"}))
+        self.assertFalse(R.kx_deep({"yes_bid_dollars": "0.5000", "yes_ask_dollars": "0.5200"}))
+        self.assertFalse(R.kx_deep({"yes_bid_dollars": "0.0000", "yes_ask_dollars": "1.0000"}))  # empty
+
+    def test_kalshi_batch_pairs_by_named_ticker(self):
+        calls = []
+        def fake(url, params=None, raw=False):
+            calls.append(params)
+            return {"orderbooks": [{"ticker": "A,B", "orderbook_fp": {}}, {"ticker": "B"}]}
+        old, R.P.get = R.P.get, fake
+        try:
+            got = R.kx_books(["A", "B"])
+        finally:
+            R.P.get = old
+        self.assertEqual(set(got), {"B"})                    # "A,B" is never a market
+        self.assertEqual(calls[0]["tickers"], ["A", "B"])    # a list: urlencode repeats it
+
+    def test_kalshi_orders_refused(self):
+        with self.assertRaises(RuntimeError):
+            R.P.get("https://api.elections.kalshi.com/trade-api/v2/portfolio/orders")
+
+    def test_gemini_book_levels(self):
+        b = {"bids": [{"price": "0.62", "amount": "5"}, {"price": "0.63", "amount": "1"}],
+             "asks": [{"price": "0.66", "amount": "2"}, {"price": "0.65", "amount": "3"}]}
+        rows = R.gemini_book_rows([("S", "E", "X", 1.0, b)], "ts")
+        self.assertEqual([(r["side"], r["level"], r["price"]) for r in rows],
+                         [("bid", 0, 0.63), ("bid", 1, 0.62), ("ask", 0, 0.65), ("ask", 1, 0.66)])
+
+    def test_pmus_targets_window(self):
+        now = datetime(2026, 11, 26, 0, 0, tzinfo=timezone.utc).timestamp()
+        ms = [{"slug": "a", "endDate": "2026-11-26T05:00:00Z"}, {"slug": "b", "endDate": "2026-11-28T00:00:00Z"},
+              {"slug": "c", "endDate": "2026-11-26T01:00:00Z", "closed": True}, {"slug": "d", "endDate": "x"}]
+        self.assertEqual(R.pmus_targets(ms, now), ["a"])
+
+
 class TestCompact(unittest.TestCase):
     def snap(self, root, name, rows, header=("ts", "a")):
         d = os.path.join(root, name); os.makedirs(d)

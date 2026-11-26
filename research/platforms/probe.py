@@ -13,13 +13,16 @@ OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out")
 ALLOWED = {
     "api.gemini.com": ("/v1/prediction-markets/events", "/v1/prediction-markets/maker-rebate/rates",
                        "/v1/prediction-markets/categories", "/v2/klines",
-                       "/v1/trades"),  # /v1/trades/{GEMI-...}: prediction prints while a contract is open
+                       "/v1/trades", "/v1/book"),  # /v1/trades/{GEMI-...}: prediction prints while a contract is open
     "gamma-api.polymarket.com": ("/markets", "/events", "/public-search"),
     "clob.polymarket.com": ("/prices-history",),
     "data-api.polymarket.com": ("/trades", "/activity"),
     "gateway.polymarket.us": ("/v1/markets",),
     "forecastex.com": ("/api/download",),
     "www.predictit.org": ("/api/marketdata/all/",),
+    # Kalshi public market data only: the listing and order books. Orders live under /portfolio,
+    # which is not here, and get() sends GET alone.
+    "api.elections.kalshi.com": ("/trade-api/v2/markets",),
     "api.crypto.com": ("/exchange/v1/public/get-instruments", "/exchange/v1/public/get-trades"),
 }
 LOG = []

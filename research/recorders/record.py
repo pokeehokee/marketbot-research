@@ -12,16 +12,24 @@ write the book down while it exists. One run = one snapshot of every venue below
              the contract is OPEN (it 400s 'not a valid symbol' once closed), so prints exist only
              if recorded live. Each run keeps the newest 500 per symbol; duplicates across runs are
              removed by tid downstream. A page of exactly 500 is logged as possibly saturated.
+  gemini_bk  full order book (/v1/book/{symbol}) for the same contracts: YES-space bids and asks.
+  kalshi_btc KXBTCD (the live ladder's series) markets closing within 65 minutes: top of book.
+  kalshi_bk  full ladders for those markets in the deep-ITM band (yes bid >= 0.80 or yes ask
+             <= 0.20): the queue ahead of a 0.90-0.96 resting bid, which no Kalshi endpoint keeps.
+             The orderbook carries ONLY bids per side; the YES ask is 1 - best NO bid.
   polymarket active international markets (paged): best bid/ask, last, volume, outcome prices
   pm_us      Polymarket US markets: outcome prices as listed
+  pm_us_bk   Polymarket US full books (/v1/markets/{slug}/book) for markets ending within 24 h.
+             Its price-history endpoint keeps top-of-book quotes, so only DEPTH is recorded here.
+             Thursday 6-8 AM ET maintenance empties the books: drop that window when scoring.
   predictit  every contract: best buy/sell for YES and NO, last trade
 
 Each row carries `ts`, the moment THAT venue's read returned (venues are read one after another,
 seconds apart). A missing price is written empty, never 0: a 0 meaning "no quote" and a 0
 meaning "worthless" are indistinguishable downstream (CLAUDE.md, the longshot liquidity error).
 
-Kalshi is not recorded: its own candlesticks keep 1-minute bid/ask history, so the Kalshi side
-of any comparison is read afterwards.
+Kalshi prices are not recorded: its candlesticks keep 1-minute bid/ask history and its trades are
+readable later. Only Kalshi ORDER BOOKS are recorded, because no endpoint keeps them.
 
 Read-only, unauthenticated, GET only, through probe.get's whitelist. A venue that fails is
 logged and skipped; the others still record. Output: <out>/<venue>.csv.gz plus run.log.
@@ -207,7 +215,7 @@ def fetch_gemini_settled():
 GTRD_COLS = ["ts", "symbol", "event", "event_expiry", "tid", "timestampms", "price", "amount",
              "taker"]
 TRADE_HOURS = 3       # contracts whose event expires within this many hours
-TRADE_MAX = 150       # symbols per run; public REST is 120/min, so the loop paces itself
+TRADE_MAX = 120       # symbols per run; public REST is 120/min, so the loop paces itself
 TRADE_PACE = 0.55     # seconds between calls
 LAST_GEMINI = []      # the active-events read of this run, reused rather than fetched twice
 
@@ -253,6 +261,146 @@ def fetch_gemini_trades():
     return got
 
 
+BOOKS = {}            # symbol -> book, filled alongside the trade reads
+
+
+def fetch_gemini_books():
+    if not LAST_GEMINI:
+        raise RuntimeError("no active-events read this run")
+    got = []
+    for i, (_, sym, ev, exp) in enumerate(trade_targets(LAST_GEMINI, time.time())):
+        if i:
+            time.sleep(TRADE_PACE)
+        try:
+            b = P.get("https://api.gemini.com/v1/book/" + sym, {"limit_bids": 0, "limit_asks": 0})
+        except RuntimeError as e:
+            log(f"    {sym}: {str(e)[:80]}")
+            continue
+        got.append((sym, ev, exp, time.time(), b))
+    return got
+
+
+GBK_COLS = ["ts", "fetched", "symbol", "event", "event_expiry", "side", "level", "price", "qty"]
+
+
+def gemini_book_rows(got, ts):
+    out = []
+    for sym, ev, exp, at, b in got:
+        for side in ("bids", "asks"):
+            lv = []
+            for x in (b or {}).get(side) or []:
+                p, q = px(x.get("price")), num(x.get("amount"))
+                if p != "" and q != "" and q > 0:
+                    lv.append((p, q))
+            lv.sort(key=lambda t: -t[0] if side == "bids" else t[0])   # level 0 = best
+            out += [dict(ts=ts, fetched=round(at, 2), symbol=sym, event=ev, event_expiry=exp,
+                         side=side[:-1], level=i, price=p, qty=q) for i, (p, q) in enumerate(lv)]
+    return out
+
+
+KX = "https://api.elections.kalshi.com/trade-api/v2"
+KX_WINDOW_S = 65 * 60
+KX_DEPTH_MAX = 80
+KX_CHUNK = 20
+KX_DEPTH = []         # ladders read this run, handed to the kalshi_bk venue
+
+
+def kx_listing(series, now_ts):
+    out, cur = [], None
+    for _ in range(20):
+        q = {"series_ticker": series, "status": "open", "limit": 1000}
+        if cur:
+            q["cursor"] = cur
+        d = P.get(KX + "/markets", q)
+        out += d.get("markets") or []
+        cur = d.get("cursor")
+        if not cur:
+            break
+    keep = []
+    for m in out:
+        try:
+            close = datetime.fromisoformat((m.get("close_time") or "").replace("Z", "+00:00")).timestamp()
+        except ValueError:
+            continue
+        if 0 < close - now_ts <= KX_WINDOW_S:
+            keep.append((close, m))
+    return keep
+
+
+def kx_deep(m):
+    """Deep in the money on either side: where the ladder rests its 0.90-0.96 bids."""
+    b, a = px(m.get("yes_bid_dollars")), px(m.get("yes_ask_dollars"))
+    return (b != "" and b >= 0.80) or (a != "" and a <= 0.20)
+
+
+def kx_books(tickers):
+    """Batch ladders, paired by the ticker each entry NAMES. The parameter must be repeated
+    (tickers=A&tickers=B); the comma form returns one entry named "A,B" with both sides empty,
+    which reads as a market with nothing resting (marketbot-android CLAUDE.md, 2026-11-16)."""
+    got = {}
+    for i in range(0, len(tickers), KX_CHUNK):
+        chunk = tickers[i:i + KX_CHUNK]
+        d = P.get(KX + "/markets/orderbooks", {"tickers": chunk})   # doseq: repeated
+        at = time.time()
+        for b in d.get("orderbooks") or []:
+            if b.get("ticker") in chunk:
+                got[b["ticker"]] = (at, b)
+    return got
+
+
+def fetch_kalshi_btc():
+    now_ts = time.time()
+    keep = kx_listing("KXBTCD", now_ts)
+    deep = sorted((c, m["ticker"]) for c, m in keep if kx_deep(m))[:KX_DEPTH_MAX]
+    KX_DEPTH[:] = []
+    try:
+        books = kx_books([t for _, t in deep])
+        KX_DEPTH.extend((t, at, b) for t, (at, b) in books.items())
+        log(f"    {len(keep)} markets in window, {len(deep)} deep, {len(books)} ladders")
+    except RuntimeError as e:
+        log(f"    ladders failed: {str(e)[:120]}")
+    return [(now_ts, c, m) for c, m in keep]
+
+
+KBTC_COLS = ["ts", "ticker", "event", "close", "lead_s", "strike", "yes_bid", "yes_bid_size",
+             "yes_ask", "yes_ask_size", "last", "volume", "open_interest", "exchange_index"]
+
+
+def kalshi_btc_rows(got, ts):
+    return [dict(ts=ts, ticker=m.get("ticker"), event=m.get("event_ticker"), close=m.get("close_time"),
+                 lead_s=int(c - now_ts), strike=num(m.get("floor_strike")),
+                 yes_bid=px(m.get("yes_bid_dollars")), yes_bid_size=num(m.get("yes_bid_size_fp")),
+                 yes_ask=px(m.get("yes_ask_dollars")), yes_ask_size=num(m.get("yes_ask_size_fp")),
+                 last=px(m.get("last_price_dollars")), volume=num(m.get("volume_fp")),
+                 open_interest=num(m.get("open_interest_fp")), exchange_index=m.get("exchange_index"))
+            for now_ts, c, m in got]
+
+
+def fetch_kalshi_depth():
+    return list(KX_DEPTH)
+
+
+KBK_COLS = ["ts", "fetched", "ticker", "side", "level", "price", "qty"]
+
+
+def kalshi_depth_rows(got, ts):
+    out = []
+    for t, at, b in got:
+        ob = b.get("orderbook_fp") or {}
+        for side, tag in (("yes_dollars", "yes_bid"), ("no_dollars", "no_bid")):
+            lv = []
+            for x in ob.get(side) or []:            # [] and absent both mean nothing resting
+                if not x or len(x) < 2:
+                    continue
+                p, q = px(x[0]), num(x[1])
+                if p != "" and q != "" and q > 0:
+                    lv.append((p, q))
+            lv.sort(key=lambda z: -z[0])           # level 0 = best bid; never trust server order
+            out += [dict(ts=ts, fetched=round(at, 2), ticker=t, side=tag, level=i, price=p, qty=q)
+                    for i, (p, q) in enumerate(lv)]
+    return out
+
+
 def gemini_trade_rows(got, ts):
     return [dict(ts=ts, symbol=s, event=ev, event_expiry=exp, tid=t.get("tid"),
                  timestampms=t.get("timestampms"), price=px(t.get("price")), amount=num(t.get("amount")),
@@ -271,7 +419,53 @@ def fetch_pmus():
     def f(off):
         r = P.get(PMUS, {"limit": 200, "offset": off})
         return r if isinstance(r, list) else (r.get("markets") or r.get("data") or [])
-    return paged(f, lambda m: m.get("id"), 200, 20)
+    LAST_PMUS[:] = paged(f, lambda m: m.get("id"), 200, 20)
+    return LAST_PMUS
+
+
+PMUS_BOOK_HOURS = 24
+PMUS_BOOK_MAX = 150
+LAST_PMUS = []
+
+
+def pmus_targets(markets, now_ts, hours=PMUS_BOOK_HOURS, cap=PMUS_BOOK_MAX):
+    out = []
+    for m in markets:
+        if m.get("closed") or not m.get("slug"):
+            continue
+        try:
+            end = datetime.fromisoformat((m.get("endDate") or "").replace("Z", "+00:00")).timestamp()
+        except ValueError:
+            continue
+        if 0 < end - now_ts <= hours * 3600:
+            out.append((end, m["slug"]))
+    out.sort()
+    return [slug for _, slug in out[:cap]]
+
+
+def fetch_pmus_books():
+    if not LAST_PMUS:
+        raise RuntimeError("no Polymarket US listing this run")
+    got = []
+    for i, slug in enumerate(pmus_targets(LAST_PMUS, time.time())):
+        if i:
+            time.sleep(0.1)          # ~20 req/s allowed; stay well under
+        try:
+            got.append((slug, time.time(), P.get(f"{PMUS}/{slug}/book")))
+        except RuntimeError as e:
+            log(f"    {slug}: {str(e)[:80]}")
+    return got
+
+
+PMBK_COLS = ["ts", "fetched", "slug", "raw"]
+
+
+def pmus_book_rows(got, ts):
+    """Stored raw (compact JSON): the book's shape was not confirmed live before this was written,
+    and a guessed parser that silently drops a side is worse than a payload parsed later."""
+    import json
+    return [dict(ts=ts, fetched=round(at, 2), slug=slug, raw=json.dumps(b, separators=(",", ":")))
+            for slug, at, b in got]
 
 
 def fetch_pi():
@@ -282,8 +476,12 @@ VENUES = [
     ("gemini", fetch_gemini, gemini_rows, GEMINI_COLS),
     ("gemini_settled", fetch_gemini_settled, gemini_settled_rows, GEMSET_COLS),
     ("gemini_trades", fetch_gemini_trades, gemini_trade_rows, GTRD_COLS),
+    ("gemini_books", fetch_gemini_books, gemini_book_rows, GBK_COLS),
+    ("kalshi_btc", fetch_kalshi_btc, kalshi_btc_rows, KBTC_COLS),
+    ("kalshi_btc_depth", fetch_kalshi_depth, kalshi_depth_rows, KBK_COLS),
     ("polymarket", fetch_pm, pm_rows, PM_COLS),
     ("pm_us", fetch_pmus, pmus_rows, PMUS_COLS),
+    ("pm_us_books", fetch_pmus_books, pmus_book_rows, PMBK_COLS),
     ("predictit", fetch_pi, pi_rows, PI_COLS),
 ]
 

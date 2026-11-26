@@ -1,0 +1,527 @@
+cutoff: {"market_positions_last_updated_ts": "2026-09-27T00:00:00Z", "market_settled_ts": "2026-09-27T00:00:00Z", "orders_updated_ts": "2026-11-12T00:00:00Z", "trades_created_ts": "2026-09-27T00:00:00Z"}
+/series: 17148 listed, 525 match /COFFEE|COCOA|SUGAR|CORN|WHEAT|SOY|CATTLE|HOG|COTTON|ORANGE|LUMBER|PLATINUM|PALLADIUM|OATS|RICE|EGG|BEEF|COMMOD/
+  AAAGASD                  Economics              daily      quadratic                  US gas price up
+  AAAGASM                  Economics              monthly    quadratic                  US gas price
+  AAAGASMAX                Economics              annual     quadratic                  US highest gas price yearly
+  AAAGASMAXCA              Economics              annual     quadratic                  California highest gas price yearly
+  AAAGASMAXTX              Economics              annual     quadratic                  Texas highest gas price yearly
+  AAAGASMIN                Economics              annual     quadratic                  US lowest gas price yearly
+  AAAGASMINCA              Economics              annual     quadratic                  California lowest gas price yearly
+  AAAGASMINTX              Economics              annual     quadratic                  Texas lowest gas price yearly
+  AAAGASW                  Economics              weekly     quadratic                  US gas price up
+  AAAGASY                  Economics              annual     quadratic                  US gas price up
+  AUCTIONPRICETREY         Financials             one_off    quadratic                  TREY DINOSOUR AUCTION PRICE 
+  BTCD                     Crypto                 daily      quadratic                  Bitcoin price Above/below
+  COSTCOHOTDOG             Economics              custom     quadratic                  Costco hot dog price increase
+  COSTCOMEMBER             Economics              custom     quadratic                  Costco membership price increase
+  DIESEL                   Economics              weekly     quadratic                  Diesel price this week
+  DIESELM                  Economics              monthly    quadratic                  Diesel price this month
+  ETHD                     Crypto                 daily      quadratic                  Ethereum price Above/below
+  GASMAX                   Economics              annual     quadratic                  EIA Gas highest price yearly
+  GASMIN                   Economics              annual     quadratic                  EIA Gas lowest price yearly
+  GOLD                     Financials             daily      quadratic                  Price of gold
+  HOMEUS                   Economics              monthly    quadratic                  US housing price up monthly
+  HOMEUSY                  Economics              annual     quadratic                  US housing prices up
+  HPI                      Economics              monthly    quadratic                  Housing Price Index
+  KX65BEEF                 Commodities            one_off    quadratic                  65% Beef
+  KXA100MAX                Science and Technology annual     quadratic_with_maker_fees  A100 Yearly Directional Price
+  KXA100MON                Science and Technology one_off    quadratic_with_maker_fees  A100 Monthly Price
+  KXA100Q                  Science and Technology custom     quadratic_with_maker_fees  A100 Quarterly Directional Price
+  KXA100W                  Science and Technology weekly     quadratic_with_maker_fees  A100 Weekly Price
+  KXAAAEVM                 Economics              monthly    quadratic                  US EV charging price
+  KXAAAGASCDAK             Economics              daily      quadratic                  Alaska gas price
+  KXAAAGASCDAL             Economics              daily      quadratic                  Alabama gas price
+  KXAAAGASCDAR             Economics              daily      quadratic                  Arkansas gas price
+  KXAAAGASCDAZ             Economics              daily      quadratic                  Arizona gas price
+  KXAAAGASCDCA             Economics              daily      quadratic                  California gas price
+  KXAAAGASCDCO             Economics              daily      quadratic                  Colorado gas price
+  KXAAAGASCDCT             Economics              daily      quadratic                  Connecticut gas price
+  KXAAAGASCDDE             Economics              daily      quadratic                  Delaware gas price
+  KXAAAGASCDFL             Economics              daily      quadratic                  Florida gas price
+  KXAAAGASCDGA             Economics              daily      quadratic                  Georgia gas price
+  KXAAAGASCDHI             Economics              daily      quadratic                  Hawaii gas price
+  KXAAAGASCDIA             Economics              daily      quadratic                  Iowa gas price
+  KXAAAGASCDID             Economics              daily      quadratic                  Idaho gas price
+  KXAAAGASCDIL             Economics              daily      quadratic                  Illinois gas price
+  KXAAAGASCDIN             Economics              daily      quadratic                  Indiana gas price
+  KXAAAGASCDKS             Economics              daily      quadratic                  Kansas gas price
+  KXAAAGASCDKY             Economics              daily      quadratic                  Kentucky gas price
+  KXAAAGASCDLA             Economics              daily      quadratic                  Louisiana gas price
+  KXAAAGASCDMA             Economics              daily      quadratic                  Massachusetts gas price
+  KXAAAGASCDMD             Economics              daily      quadratic                  Maryland gas price
+  KXAAAGASCDME             Economics              daily      quadratic                  Maine gas price
+  KXAAAGASCDMI             Economics              daily      quadratic                  Michigan gas price
+  KXAAAGASCDMN             Economics              daily      quadratic                  Minnesota gas price
+  KXAAAGASCDMO             Economics              daily      quadratic                  Missouri gas price
+  KXAAAGASCDMS             Economics              daily      quadratic                  Mississippi gas price
+  KXAAAGASCDMT             Economics              daily      quadratic                  Montana gas price
+  KXAAAGASCDNC             Economics              daily      quadratic                  North Carolina gas price
+  KXAAAGASCDND             Economics              daily      quadratic                  North Dakota gas price
+  KXAAAGASCDNE             Economics              daily      quadratic                  Nebraska gas price
+  KXAAAGASCDNH             Economics              daily      quadratic                  New Hampshire gas price
+  KXAAAGASCDNJ             Economics              daily      quadratic                  New Jersey gas price
+  KXAAAGASCDNM             Economics              daily      quadratic                  New Mexico gas price
+  KXAAAGASCDNV             Economics              daily      quadratic                  Nevada gas price
+  KXAAAGASCDNY             Economics              daily      quadratic                  New York gas price
+  KXAAAGASCDOH             Economics              daily      quadratic                  Ohio gas price
+  KXAAAGASCDOK             Economics              daily      quadratic                  Oklahoma gas price
+  KXAAAGASCDOR             Economics              daily      quadratic                  Oregon gas price
+  KXAAAGASCDPA             Economics              daily      quadratic                  Pennsylvania gas price
+  KXAAAGASCDRI             Economics              daily      quadratic                  Rhode Island gas price
+  KXAAAGASCDSC             Economics              daily      quadratic                  South Carolina gas price
+  KXAAAGASCDSD             Economics              daily      quadratic                  South Dakota gas price
+  KXAAAGASCDTN             Economics              daily      quadratic                  Tennessee gas price
+  KXAAAGASCDTX             Economics              daily      quadratic                  Texas gas price
+  KXAAAGASCDUT             Economics              daily      quadratic                  Utah gas price
+  KXAAAGASCDVA             Economics              daily      quadratic                  Virginia gas price
+  KXAAAGASCDVT             Economics              daily      quadratic                  Vermont gas price
+  KXAAAGASCDWA             Economics              daily      quadratic                  Washington gas price
+  KXAAAGASCDWI             Economics              daily      quadratic                  Wisconsin gas price
+  KXAAAGASCDWV             Economics              daily      quadratic                  West Virginia gas price
+  KXAAAGASCDWY             Economics              daily      quadratic                  Wyoming gas price
+  KXAAAGASD                Economics              daily      quadratic                  US gas price up
+  KXAAAGASDAK              Economics              daily      quadratic                  Alaska gas price
+  KXAAAGASDAL              Economics              daily      quadratic                  Alabama gas price
+  KXAAAGASDAR              Economics              daily      quadratic                  Arkansas gas price
+  KXAAAGASDAZ              Economics              daily      quadratic                  Arizona gas price
+  KXAAAGASDCA              Economics              daily      quadratic                  California gas price
+  KXAAAGASDCO              Economics              daily      quadratic                  Colorado gas price
+  KXAAAGASDCT              Economics              daily      quadratic                  Connecticut gas price
+  KXAAAGASDDE              Economics              daily      quadratic                  Delaware gas price
+  KXAAAGASDFL              Economics              daily      quadratic                  Florida gas price
+  KXAAAGASDGA              Economics              daily      quadratic                  Georgia gas price
+  KXAAAGASDHI              Economics              daily      quadratic                  Hawaii gas price
+  KXAAAGASDIA              Economics              daily      quadratic                  Iowa gas price
+  KXAAAGASDID              Economics              daily      quadratic                  Idaho gas price
+  KXAAAGASDIL              Economics              daily      quadratic                  Illinois gas price
+  KXAAAGASDIN              Economics              daily      quadratic                  Indiana gas price
+  KXAAAGASDKS              Economics              daily      quadratic                  Kansas gas price
+  KXAAAGASDKY              Economics              daily      quadratic                  Kentucky gas price
+  KXAAAGASDLA              Economics              daily      quadratic                  Louisiana gas price
+  KXAAAGASDMA              Economics              daily      quadratic                  Massachusetts gas price
+  KXAAAGASDMD              Economics              daily      quadratic                  Maryland gas price
+  KXAAAGASDME              Economics              daily      quadratic                  Maine gas price
+  KXAAAGASDMI              Economics              daily      quadratic                  Michigan gas price
+  KXAAAGASDMN              Economics              daily      quadratic                  Minnesota gas price
+  KXAAAGASDMO              Economics              daily      quadratic                  Missouri gas price
+  KXAAAGASDMS              Economics              daily      quadratic                  Mississippi gas price
+  KXAAAGASDMT              Economics              daily      quadratic                  Montana gas price
+  KXAAAGASDNC              Economics              daily      quadratic                  North Carolina gas price
+  KXAAAGASDND              Economics              daily      quadratic                  North Dakota gas price
+  KXAAAGASDNE              Economics              daily      quadratic                  Nebraska gas price
+  KXAAAGASDNH              Economics              daily      quadratic                  New Hampshire gas price
+  KXAAAGASDNJ              Economics              daily      quadratic                  New Jersey gas prices
+  KXAAAGASDNM              Economics              daily      quadratic                  New Mexico gas price
+  KXAAAGASDNV              Economics              daily      quadratic                  Nevada gas price
+  KXAAAGASDNY              Economics              daily      quadratic                  New York gas price
+  KXAAAGASDOH              Economics              daily      quadratic                  Ohio gas price
+  KXAAAGASDOK              Economics              daily      quadratic                  Oklahoma gas price
+  KXAAAGASDOR              Economics              daily      quadratic                  Oregon gas price
+  KXAAAGASDPA              Economics              daily      quadratic                  Pennsylvania gas price
+  KXAAAGASDRI              Economics              daily      quadratic                  Rhode Island gas price
+  KXAAAGASDSC              Economics              daily      quadratic                  South Carolina gas price
+  KXAAAGASDSD              Economics              daily      quadratic                  South Dakota gas price
+  KXAAAGASDTN              Economics              daily      quadratic                  Tennessee gas price
+  KXAAAGASDTX              Economics              daily      quadratic                  TX gas price
+  KXAAAGASDUT              Economics              daily      quadratic                  Utah gas price
+  KXAAAGASDVA              Economics              daily      quadratic                  Virginia gas price
+  KXAAAGASDVT              Economics              daily      quadratic                  Vermont gas price
+  KXAAAGASDWA              Economics              daily      quadratic                  Washington gas price
+  KXAAAGASDWI              Economics              daily      quadratic                  Wisconsin gas price
+  KXAAAGASDWV              Economics              daily      quadratic                  West Virginia gas price
+  KXAAAGASDWY              Economics              daily      quadratic                  Wyoming gas price
+  KXAAAGASED               Economics              one_off    quadratic                  US gas price on Election Day
+  KXAAAGASEOYNJ            Economics              annual     quadratic                  New Jersey gas price at EOY
+  KXAAAGASM                Economics              monthly    quadratic_with_maker_fees  US gas price
+  KXAAAGASMAX              Economics              annual     quadratic                  US highest gas price yearly
+  KXAAAGASMAXCA            Economics              annual     quadratic                  California highest gas price yearly
+  KXAAAGASMAXFL            Economics              annual     quadratic                  Florida highest gas price yearly
+  KXAAAGASMAXM             Economics              monthly    quadratic                  US highest gas price monthly
+  KXAAAGASMAXNY            Economics              annual     quadratic                  NEW YORK highest gas price yearly
+  KXAAAGASMAXTX            Economics              annual     quadratic                  Texas highest gas price yearly
+  KXAAAGASMIN              Economics              annual     quadratic                  US lowest gas price yearly
+  KXAAAGASMINCA            Economics              annual     quadratic                  California lowest gas price yearly
+  KXAAAGASMINFL            Economics              annual     quadratic                  Florida lowest gas price yearly
+  KXAAAGASMINM             Economics              monthly    quadratic                  US lowest gas price monthly
+  KXAAAGASMINNY            Economics              annual     quadratic                  NEW YORK LOWEST gas price yearly
+  KXAAAGASMINTX            Economics              annual     quadratic                  Texas lowest gas price yearly
+  KXAAAGASMTX              Economics              monthly    quadratic                  Texas gas price this month
+  KXAAAGASW                Economics              weekly     quadratic                  US gas price up
+  KXAAAGASWNJ              Economics              weekly     quadratic                  New Jersey gas price this week
+  KXAAAGASY                Economics              annual     quadratic                  US gas price up
+  KXAAPLPRICE17OVER16      Companies              one_off    quadratic                  APPLE IPHONE 17 PRICE MORE THAN 16
+  KXAAPLPRICEFOLD          Companies              custom     quadratic                  FOLDABLE IPHONE PRICE
+  KXADAMAXM                Crypto                 monthly    quadratic                  Cardano price high by month-end
+  KXADAMINM                Crypto                 monthly    quadratic                  Cardano price low by month-end
+  KXAIFOOD                 Science and Technology monthly    quadratic                  Accommodation and food AI adoption
+  KXAIRTAGS2PRICE          Financials             one_off    quadratic                  Apple AirTags 2 Price
+  KXALMWP                  Commodities            monthly    quadratic                  Aluminum Midwest premium
+  KXAMSAVO                 Economics              weekly     quadratic                  Hass avocado prices this week
+  KXANTHTOKEND             Financials             one_off    quadratic                  Anthropic token price
+  KXANTHTOKENM             Financials             one_off    quadratic                  Anthropic Token Price
+  KXAPSMM                  Commodities            one_off    quadratic                  Ammonium Paratungstate
+  KXAPTFM                  Commodities            custom     quadratic                  Fastmarkets tungsten APT price
+  KXAPTROT                 Commodities            one_off    quadratic                  SMM CIF Rotterdam 88.5% APT
+  KXART                    Entertainment          one_off    quadratic                  what will the price of art be?
+  KXARTCOLLECTION          Entertainment          one_off    quadratic                  price of art collection
+  KXARTWORKPRICE           Entertainment          custom     quadratic                  Art auction prices
+  KXAUCTIONPRICETRY        Financials             one_off    quadratic                  NO
+  KXAVAXD                  Crypto                 daily      quadratic                  Avalanche price Above/below
+  KXB200MAX                Science and Technology annual     quadratic_with_maker_fees  B100 Yearly Directional Price
+  KXB200MON                Science and Technology monthly    quadratic_with_maker_fees  B200 Monthly Price
+  KXB200Q                  Science and Technology custom     quadratic_with_maker_fees  B200 Quarterly Directional Price
+  KXB200W                  Science and Technology weekly     quadratic_with_maker_fees  B200 Weekly Price
+  KXB65                    Commodities            one_off    quadratic                  Beef 65
+  KXB85                    Commodities            one_off    quadratic                  B85
+  KXBCHD                   Crypto                 daily      quadratic                  Bitcoin Cash price Above/below
+  KXBEEF65                 Commodities            one_off    quadratic                  Monthly Beef 65%
+  KXBEEF85                 Commodities            one_off    quadratic                  Monthly Beef 85%
+  KXBEEFTARIFF             Politics               one_off    quadratic                  Will Trump lower beef tariffs?
+  KXBKDWHOPPER             Economics              monthly    quadratic                  Price of a Burger King Double Whopper this month
+  KXBKNUGGETS              Economics              monthly    quadratic                  Price of a Burger King 8-piece nuggets this month
+  KXBOATSTRIKERELEASE      Entertainment          one_off    quadratic                  Will the boat strike video be released
+  KXBRENT15M               Commodities            fifteen_min quadratic                  Brent 15-minute
+  KXBRENTD                 Commodities            daily      quadratic                  Brent Oil Daily
+  KXBRENTMON               Commodities            monthly    quadratic                  Brent Monthly
+  KXBRENTW                 Commodities            weekly     quadratic                  Brent Oil
+  KXBRENTWEX               Commodities            one_off    quadratic                  Brent Oil Weekly Exclusive
+  KXBROCCOLI               Economics              one_off    quadratic                  Los Angeles broccoli prices
+  KXBTCD                   Crypto                 hourly     quadratic                  Bitcoin price Above/below
+  KXBTCHITBY               Crypto                 custom     quadratic                  Bitcoin above a price by a date
+  KXBTCPRICE               Crypto                 one_off    quadratic                  will Bitcoin hit price target by date
+  KXBTCQ                   Crypto                 custom     quadratic                  What will BTC's price be end of Q2 2026?
+  KXBTCY                   Crypto                 annual     quadratic                  BTC price range EOY
+  KXBTCYEAR                Crypto                 one_off    quadratic                  BTC Reach price by year
+  KXBUNDESLIGACORNERS      Sports                 custom     quadratic                  Total Corners
+  KXBUNDESLIGATCORNERS     Sports                 custom     quadratic                  Team Corners
+  KXCAHPIYOY               Economics              one_off    quadratic                  California home prices
+  KXCALHOME                Economics              annual     quadratic                  Calgary home price below X in [year]
+  KXCANHOME                Economics              annual     quadratic                  Will Canada’s national average home price exceed X in [month]?
+  KXCCAPRICE               Financials             one_off    quadratic                  CCA Auction Price
+  KXCCAPRICEICE            Financials             one_off    quadratic                  CCA Auction Price versus ICE CCA Futures
+  KXCCAVSICE               Financials             quarterly  quadratic                  CCA Auction Price versus ICE CCA Futures
+  KXCFACHICKSAND           Economics              monthly    quadratic                  Price of a Chick-fil-A chicken sandwich this month
+  KXCHICKENWINGM           Economics              monthly    quadratic                  Average U.S. wholesale chicken wing price
+  KXCHIPBURRITO            Economics              monthly    quadratic                  Price of a Chipotle chicken burrito this month
+  KXCOBALTMON              Commodities            monthly    quadratic                  Cobalt Monthly
+  KXCOBALTW                Commodities            weekly     quadratic                  Cobalt Weekly
+  KXCOCOAD                 Commodities            daily      quadratic                  Cocoa Daily
+  KXCOCOAMON               Commodities            monthly    quadratic                  Cocoa Monthly
+  KXCOCOAW                 Commodities            weekly     quadratic                  Cocoa Directional Weekly
+  KXCOFFEE15M              Commodities            fifteen_min quadratic                  Coffee 15-minute
+  KXCOFFEEARRAY            Financials             monthly    quadratic                  Coffee chain foot traffic array
+  KXCOFFEED                Commodities            daily      quadratic                  Coffee Daily
+  KXCOFFEEEOY              Commodities            annual     quadratic                  Coffee price at year-end
+  KXCOFFEEH                Commodities            hourly     quadratic                  Coffee Hourly
+  KXCOFFEEM                Financials             one_off    quadratic                  Coffee Monthly Price
+  KXCOFFEEMON              Commodities            monthly    quadratic                  Coffee Monthly
+  KXCOFFEEMON2             Commodities            monthly    quadratic                  Coffee Monthly Price
+  KXCOFFEEW                Commodities            weekly     quadratic                  Weekly Coffee Price
+  KXCOFFEEW2               Commodities            weekly     quadratic                  Coffee Weekly price
+  KXCOHPIYOY               Economics              one_off    quadratic                  Colorado home prices
+  KXCOPPER15M              Commodities            fifteen_min quadratic                  Copper 15-minute
+  KXCOPPERD                Commodities            daily      quadratic                  Daily Copper
+  KXCOPPEREVENT            Commodities            custom     quadratic                  Copper after economic events
+  KXCOPPERMON              Commodities            monthly    quadratic                  Copper Monthly Price
+  KXCOPPERW                Commodities            weekly     quadratic                  Copper Weekly Price
+  KXCORND                  Commodities            daily      quadratic                  Corn Daily
+  KXCORNELLAPPS            Entertainment          annual     quadratic                  Cornell First-Year Applicants
+  KXCORNELLRATE            Entertainment          annual     quadratic                  Cornell Admissions Rate
+  KXCORNMON                Commodities            monthly    quadratic                  Corn Monthly
+  KXCORNW                  Commodities            weekly     quadratic                  Corn Weekly
+  KXCORNWALLMEADOWBY       Elections              one_off    quadratic                  Cornwall–Meadowbank PEI Assembly by-election
+  KXCORNYNTALARICO         Politics               one_off    quadratic                  Will John Cornyn endorse James Talarico?
+  KXCOSTCOHOTDOG           Economics              custom     quadratic                  Costco hot dog price increase
+  KXCOSTCOMEMBER           Financials             custom     quadratic                  Costco membership price increase
+  KXCOTTONCANDYLOBSTER     Entertainment          one_off    quadratic                  ill event be confirmed
+  KXCREYOY                 Economics              annual     quadratic                  US commercial real estate prices YoY
+  KXDDCOLDBREW             Economics              monthly    quadratic                  Price of a Dunkin' Medium Cold Brew this month
+  KXDEEPTOKEND             Science and Technology one_off    quadratic                  DeepSeek Token Price
+  KXDEEPTOKENM             Science and Technology one_off    quadratic                  DeepSeek Token Price
+  KXDIESEL                 Economics              weekly     quadratic                  Diesel price this week
+  KXDIESELD                Economics              daily      quadratic                  Daily Diesel Price
+  KXDIESELELECT            Economics              one_off    quadratic                  Diesel prices on Election Day
+  KXDIESELM                Economics              monthly    quadratic                  Diesel price this month
+  KXDIESELMAXY             Economics              annual     quadratic                  Highest U.S. diesel price by year
+  KXDIESELMINY             Economics              annual     quadratic                  Lowest U.S. diesel price by year
+  KXDIESELMON              Economics              monthly    quadratic                  Diesel Prices month
+  KXDIESELMONAK            Economics              monthly    quadratic                  Alaska diesel price this month
+  KXDIESELW                Economics              weekly     quadratic                  diesel price week
+  KXDIESELYE               Economics              annual     quadratic                  Diesel prices at year end
+  KXDIRICEHOMAN            Politics               custom     quadratic                  Homan Director of U.S. Immigration and Customs Enforcement
+  KXDIRICEVITIELLO         Politics               custom     quadratic                  Vitiello Director of U.S. Immigration and Customs Enforcement
+  KXDISLANDPRICE           Economics              annual     quadratic                  Disneyland ticket prices
+  KXDOGED                  Crypto                 hourly     quadratic                  Dogecoin price Above/below
+  KXDOJBEEFACTION          Politics               one_off    quadratic                  DOJ beef-retailer antitrust action
+  KXDRUGPRICEINSULIN       Health                 custom     quadratic                  Insulin price
+  KXDRUGPRICEOZEMPIC       Health                 custom     quadratic                  Ozempic price
+  KXEDMHOME                Economics              annual     quadratic                  Edmonton home price below x in [year]
+  KXEGGPRICEM              Economics              custom     quadratic                  Egg prices monthly
+  KXEGGPRICEW              Economics              custom     quadratic                  Egg prices weekly
+  KXEGGS                   Economics              monthly    quadratic_with_maker_fees  Egg prices
+  KXENGCSCORNERS           Sports                 custom     quadratic                  Total Corners
+  KXENGCSTCORNERS          Sports                 custom     quadratic                  Team Corners
+  KXEPLCORNERS             Sports                 custom     quadratic                  EPL Corners
+  KXEPLTCORNERS            Sports                 custom     quadratic                  EPL Team Corners
+  KXERCOTHOUM              Commodities            monthly    quadratic                  ERCOT Houston Hub monthly power price
+  KXERCOTHOUW              Commodities            weekly     quadratic                  ERCOT Houston Hub weekly power price
+  KXERCOTNORTHM            Commodities            monthly    quadratic                  ERCOT North Hub monthly power price
+  KXERCOTNORTHW            Commodities            weekly     quadratic                  ERCOT North Hub weekly power price
+  KXERCOTWESTM             Commodities            monthly    quadratic                  ERCOT West Hub monthly power price
+  KXERCOTWESTW             Commodities            weekly     quadratic                  ERCOT West Hub weekly power price
+  KXETHD                   Crypto                 hourly     quadratic                  Ethereum price Above/below
+  KXETHY                   Crypto                 annual     quadratic                  ETH price EOY 
+  KXEUBEEFQ                Commodities            quarterly  quadratic                  EU beef quarterly threshold
+  KXEXUSHOME               Economics              monthly    quadratic                  Median Existing US Home Price
+  KXFAOFPI                 Economics              monthly    quadratic                  FAO Food Price Index in [month]?
+  KXFERT                   Economics              one_off    quadratic                  Fertilizer prices
+  KXFISHMEAL               Economics              monthly    quadratic                  Fish meal price average price
+  KXFLGRAPEFRUIT           Commodities            quarterly  quadratic                  Florida grapefruit production forecast
+  KXFRAGRANCE              Entertainment          one_off    quadratic                  Fragrance Price
+  KXFYREFESTPRICE          Financials             one_off    quadratic                  How much will Fyre Fest sell for?
+  KXGASMAX                 Economics              annual     quadratic                  EIA Gas highest price yearly
+  KXGASMIN                 Economics              annual     quadratic                  EIA Gas lowest price yearly
+  KXGBT55OY                Commodities            annual     quadratic                  GPT 5.5 Input Token
+  KXGEMINI35OY             Commodities            annual     quadratic                  Gemini 3.5 Flash Output Token
+  KXGEMINI35Y              Commodities            annual     quadratic                  Gemini 3.5 Flash
+  KXGOLD                   Financials             daily      quadratic                  Price of gold
+  KXGOLD15M                Commodities            fifteen_min quadratic                  Gold 15-minute
+  KXGOLDD                  Commodities            daily      quadratic                  Gold Daily
+  KXGOLDDIRY               Commodities            annual     quadratic                  GOLDDIRY
+  KXGOLDEOY                Commodities            annual     quadratic                  How high will Gold get by end of year? 
+  KXGOLDEVENT              Commodities            custom     quadratic                  Gold after economic events
+  KXGOLDH                  Commodities            hourly     quadratic                  Gold Hourly
+  KXGOLDMON                Commodities            monthly    quadratic                  Gold Monthly Price
+  KXGOLDPRICE              Financials             one_off    quadratic                  Gold
+  KXGOLDW                  Commodities            weekly     quadratic                  Gold Weekly price 
+  KXGOLDY                  Financials             annual     quadratic                  Price of Gold at year-end?
+  KXGOLDYEAR               Commodities            annual     quadratic                  How high will Gold get by year-end?
+  KXGOOGTOKEND             Science and Technology one_off    quadratic                  Google Token Price
+  KXGOOGTOKENM             Science and Technology one_off    quadratic                  Google Token Price
+  KXGPT55Y                 Commodities            annual     quadratic                  GPT 5.5 Input Token
+  KXGRAMBRG                Entertainment          one_off    quadratic                  Best Reggae Album
+  KXGREENLANDPRICE         Politics               one_off    quadratic                  How much will Greenland be acquired for?
+  KXGTAPRICE               Entertainment          custom     quadratic                  GTA price
+  KXH100MAX                Science and Technology annual     quadratic_with_maker_fees  H100 Yearly Directional Price
+  KXH100MON                Science and Technology monthly    quadratic_with_maker_fees  H100 Monthly Price
+  KXH100Q                  Science and Technology custom     quadratic_with_maker_fees  H100 Quarterly Directional Price
+  KXH100W                  Science and Technology weekly     quadratic_with_maker_fees  H100 Weekly Price
+  KXH200MAX                Science and Technology annual     quadratic_with_maker_fees  H200 Yearly Directional Price
+  KXH200MON                Science and Technology monthly    quadratic_with_maker_fees  H200 Monthly Price
+  KXH200Q                  Science and Technology custom     quadratic_with_maker_fees  H200 Quarterly Directional Price
+  KXH200W                  Science and Technology weekly     quadratic_with_maker_fees  H200 Weekly Price
+  KXHERMESBIRKIN           Entertainment          one_off    quadratic                  highest sale price
+  KXHERMESKELLY            Entertainment          one_off    quadratic                  highest sale price
+  KXHOGGOUT                Elections              one_off    quadratic                  HOGGOUT
+  KXHOGGREMOVE             Politics               one_off    quadratic                  DHOGG
+  KXHOILMON                Commodities            monthly    quadratic                  Heating Oil Monthly
+  KXHOILW                  Commodities            weekly     quadratic                  Heating Oil Weekly
+  KXHOMEUS                 Economics              monthly    quadratic                  US housing price up monthly
+  KXHOMEUSY                Economics              annual     quadratic                  US housing prices up
+  KXHORMUZGASCOMBO         Politics               one_off    quadratic                  Hormuz traffic × Jul 31, 2027 gas price
+  KXHPI                    Economics              monthly    quadratic                  Housing Price Index
+  KXHULKHOGANATTEND        Entertainment          one_off    quadratic                  Who will attend Hulk Hogan's Funereal
+  KXIACORN                 Economics              annual     quadratic                  Iowa corn production
+  KXILHPIYOY               Economics              annual     quadratic                  Illinois home prices
+  KXINCORNYIELD            Economics              one_off    quadratic                  Indiana corn yield
+  KXINXEOYCLOSE            Financials             annual     quadratic                  S&P 500 end of year price
+  KXIPHONEPRICE            Science and Technology custom     quadratic                  iPhone prices
+  KXIPLORANGECAP           Sports                 custom     quadratic                  IPL Orange Cap Winner
+  KXIRKUTSKPATHOGEN        Science and Technology one_off    quadratic                  Irkutsk lab worker pneumonia pathogen
+  KXJETFUEL                Economics              weekly     quadratic                  US Gulf Coast jet fuel price weekly
+  KXKSWHEAT                Economics              annual     quadratic                  Kansas wheat production
+  KXLALIGACORNERS          Sports                 custom     quadratic                  Total Corners
+  KXLALIGATCORNERS         Sports                 custom     quadratic                  Team Corners
+  KXLCATTLED               Commodities            daily      quadratic                  Live cattle Daily
+  KXLCATTLEMON             Commodities            monthly    quadratic                  Live Cattle Monthly
+  KXLCATTLEW               Commodities            weekly     quadratic                  Live Cattle Weekly
+  KXLEAVELECORNU           Politics               one_off    quadratic                  lecornu leaves office
+  KXLECORNUANNOUNCEOUT     Politics               one_off    quadratic                  Sébastien Lecornu announces departure as Prime Minister of France?
+  KXLIGAMXCORNERS          Sports                 custom     quadratic                  Total Corners
+  KXLIGAMXTCORNERS         Sports                 custom     quadratic                  Team Corners
+  KXLIGUE1CORNERS          Sports                 custom     quadratic                  Total Corners
+  KXLIGUE1TCORNERS         Sports                 custom     quadratic                  Team Corners
+  KXLINKD                  Crypto                 daily      quadratic                  Chainlink price Above/below
+  KXLITHIUMMON             Commodities            monthly    quadratic                  Lithium Monthly
+  KXLITHIUMW               Commodities            weekly     quadratic                  Lithium Weekly
+  KXLOCATIONOPENERICEMANUEL World                  one_off    quadratic                  Where will Eric Emanuel announce a a new store this year?
+  KXLTCD                   Crypto                 daily      quadratic                  Litecoin price Above/below
+  KXLUMBERPPIHIGH          Economics              annual     quadratic                  Softwood lumber PPI high
+  KXMACBOOKPRICE           Financials             one_off    quadratic                  MacBook Price
+  KXMARVEL                 Financials             one_off    quadratic                  price of collectable
+  KXMCDSBIGMAC             Economics              monthly    quadratic                  Price of a McDonald's Big Mac this month
+  KXMCDSEGGMCMUFFN         Economics              monthly    quadratic                  Price of a McDonald's Egg McMuffin this month
+  KXMISOINDM               Commodities            monthly    quadratic                  MISO Indiana Hub monthly power price
+  KXMISOINDW               Commodities            weekly     quadratic                  MISO Indiana Hub weekly power price
+  KXMLSCORNERS             Sports                 custom     quadratic                  Total Corners
+  KXMLSTCORNERS            Sports                 custom     quadratic                  Team Corners
+  KXMSCOTTON               Economics              annual     quadratic                  Mississippi cotton production
+  KXMTCATTLE               Economics              annual     quadratic                  Montana cattle inventory
+  KXMTLHOME                Economics              annual     quadratic                  Montreal single-family home price below X in [year]?
+  KXNATGAS15M              Commodities            fifteen_min quadratic                  Natural Gas 15-minute
+  KXNATGASD                Commodities            daily      quadratic                  Natural Gas Daily
+  KXNATGASMON              Commodities            monthly    quadratic                  Natural Gas Monthly
+  KXNATGASW                Commodities            weekly     quadratic                  Natural Gas Weekly
+  KXNBAFINALSPRICE         Financials             one_off    quadratic                  NBA Finals Ticket Price
+  KXNECOF                  Economics              annual     quadratic                  Nebraska cattle on feed
+  KXNECORNYIELD            Economics              annual     quadratic                  Nebraska corn yield
+  KXNFLXINCREASE           Financials             one_off    quadratic                  Netflix Price Increase
+  KXNGAS                   Economics              monthly    quadratic                  Natural gas price max and min monthly
+  KXNGASMAX                Economics              annual     quadratic                  Natural gas price peak
+  KXNGASW                  Economics              weekly     quadratic                  Natural gas price max and min weekly
+  KXNHHOMEPRICE            Economics              annual     quadratic                  New Hampshire House Price Index
+  KXNHLPRICE               Financials             one_off    quadratic                  NHL Ticket Prices
+  KXNHLRICHARD             Sports                 annual     quadratic                  NHL Maurice "Rocket" Richard Trophy
+  KXNICKELMON              Commodities            monthly    quadratic                  Nickel Monthly
+  KXNICKELW                Commodities            weekly     quadratic                  Nickel Weekly
+  KXNVHOMEPRICE            Economics              annual     quadratic                  Nevada House Price Index
+  KXOIL                    Economics              monthly    quadratic                  Price of oil monthly
+  KXOILW                   Economics              weekly     quadratic                  Price of oil weekly
+  KXOPENTOKEND             Science and Technology one_off    quadratic                  OpenAI Token Price 
+  KXOPENTOKENM             Science and Technology one_off    quadratic                  OpenAI token price
+  KXOPUS48M                Commodities            one_off    quadratic                  Opus 4.8 Input Token
+  KXOPUS48OY               Commodities            annual     quadratic                  Opus 4.8 Output Token
+  KXOPUS48Y                Commodities            annual     quadratic                  Opus 4.8 Input Token
+  KXOTTAWAHOME             Economics              annual     quadratic                  Ottawa home price below X in [year]?
+  KXPALLADIUM15M           Commodities            fifteen_min quadratic                  Palladium 15-minute
+  KXPALLADIUMH             Commodities            hourly     quadratic                  Palladium Hourly
+  KXPAPER                  Economics              monthly    quadratic                  Paper price index
+  KXPJMAEPDAYM             Commodities            monthly    quadratic                  PJM AEP-Dayton Hub monthly power price
+  KXPJMAEPDAYW             Commodities            weekly     quadratic                  PJM AEP-Dayton Hub weekly power price
+  KXPJMDOMM                Commodities            monthly    quadratic                  PJM Dominion Hub monthly power price
+  KXPJMDOMW                Commodities            weekly     quadratic                  PJM Dominion Hub weekly power price
+  KXPJMWESTM               Commodities            monthly    quadratic                  PJM Western Hub monthly power price
+  KXPJMWESTW               Commodities            weekly     quadratic                  PJM Western Hub weekly power price
+  KXPLATINUM15M            Commodities            fifteen_min quadratic                  Platinum 15-minute
+  KXPLATINUMH              Commodities            hourly     quadratic                  Platinum Hourly
+  KXPOKEMON                Entertainment          one_off    quadratic                  what will the price of card be
+  KXPOPCHICKSAND           Economics              monthly    quadratic                  Price of a Popeyes Classic Chicken Sandwich this month
+  KXPOWERKWH               Economics              monthly    quadratic                  Average US electricity price this month
+  KXPRICEINCREASEAMUSIC    Financials             one_off    quadratic                  Apple Music Individual SUBSCRIPTION
+  KXPRICEINCREASEAMUSICFAMILY Financials             one_off    quadratic                  APPLE MUSIC FAMILY SUBSCRIPTION 
+  KXPRICEINCREASEAPPLEMUSIC Financials             one_off    quadratic                  PRICE INCREASE APPLE MUSIC
+  KXPRICEINCREASEAZICEDTEA Financials             custom     quadratic                  ARIZONA ICED TEA PRICE INCREASE
+  KXPRICEINCREASECLAUDE    Financials             one_off    quadratic                  Claude Price Increase
+  KXPRICEINCREASESPOTIFY   Financials             one_off    quadratic                  PRICE INCREASE SPOTIFY
+  KXPRICEINCREASESPOTIFYDUO Financials             one_off    quadratic                  SPOTIFY DUO PLAN INCREASE?
+  KXPRICEINCREASESPOTIFYFAMILY Financials             one_off    quadratic                  SPOTIFY FAMILY PLAN INCREASE
+  KXPRICEINCREASESWITCH2   Financials             one_off    quadratic                  Will the Ninetendo Switch Price increase?
+  KXPRICEINCREASETRAVELERS Financials             one_off    quadratic                  TRAVELERS PRICE INCREASE
+  KXPRICEINCREASEUSPSFOREVER Financials             custom     quadratic                  USPS forever stamp increase
+  KXPS5PROPRICE            Entertainment          custom     quadratic                  Will Sony announce a price cut to the Playstation 5 Pro
+  KXRENTNYCM               Economics              monthly    quadratic                  Rent price increase in NYC monthly
+  KXRENTNYCY               Economics              annual     quadratic                  Rent price increase in NYC yearly
+  KXRICEAPPS               Entertainment          annual     quadratic                  Rice First-Year Applicants
+  KXRICERATE               Entertainment          annual     quadratic                  Rice Admissions Rate
+  KXRIHOMEPRICE            Economics              one_off    quadratic                  Rhode Island House Price Index
+  KXRIPPLED                Crypto                 daily      quadratic                  Ripple price Above/below
+  KXRIQUAHOG               Economics              annual     quadratic                  Rhode Island quahog landings
+  KXRIRESPOWER             Economics              annual     quadratic                  Rhode Island residential electricity price
+  KXROADSTERPRICE          Financials             one_off    quadratic                  Tesla Roadster starting price
+  KXRTCLOWNINACORNFIELD    Entertainment          custom     quadratic                  CLOWN IN A CORNFIELD Rotten Tomatoes score
+  KXRTX5090MAX             Science and Technology annual     quadratic_with_maker_fees  RTX5090 Yearly Directional Price
+  KXRTX5090MON             Science and Technology one_off    quadratic_with_maker_fees  RTX 5059 Monthly Price
+  KXRTX5090Q               Science and Technology custom     quadratic_with_maker_fees  RTX5090 Quarterly Directional Price
+  KXRTX5090W               Science and Technology weekly     quadratic_with_maker_fees  RTX 5090 Weekly Price
+  KXRTXPRO6000MON          Science and Technology one_off    quadratic                  RTX PRO 6000 Monthly Price
+  KXRTXPRO6000W            Science and Technology weekly     quadratic                  RTX PRO 6000 Weekly Price
+  KXRUBLE                  Economics              weekly     quadratic                  Price of Ruble
+  KXSBUXSAR                Economics              monthly    quadratic                  Price of a Starbucks Grande Strawberry Açaí Refresher this month
+  KXSDCATTLE               Economics              one_off    quadratic                  South Dakota cattle inventory
+  KXSDCORNYIELD            Economics              annual     quadratic                  South Dakota corn yield
+  KXSERIEACORNERS          Sports                 custom     quadratic                  Total Corners
+  KXSERIEATCORNERS         Sports                 custom     quadratic                  Team Corners
+  KXSHIBAD                 Crypto                 daily      quadratic                  Shiba price Above/below
+  KXSILVER15M              Commodities            fifteen_min quadratic                  Silver 15-minute
+  KXSILVERD                Commodities            daily      quadratic                  Silver daily
+  KXSILVEREVENT            Commodities            custom     quadratic                  Silver after economic events
+  KXSILVERH                Commodities            hourly     quadratic                  Silver Hourly
+  KXSILVERMON              Commodities            monthly    quadratic                  Silver Monthly Price
+  KXSILVERW                Commodities            weekly     quadratic                  Silver Weekly Price
+  KXSILVERYEAR             Commodities            annual     quadratic                  How high will Silver get by year-end?
+  KXSLATEPRICE             Financials             one_off    quadratic                  Slate Auto Price
+  KXSOLD26                 Crypto                 annual     quadratic                  SOL price end of 2026?
+  KXSONORACATTLE           Economics              one_off    quadratic                  Sonora cattle import suspension days
+  KXSOYBEAND               Commodities            daily      quadratic                  Soybean Daily
+  KXSOYBEANMON             Commodities            monthly    quadratic                  Soybean monthly
+  KXSOYBEANW               Commodities            weekly     quadratic                  Soybean Weekly
+  KXSP500WHEN              Financials             one_off    quadratic                  when SP500 price
+  KXSTATELEGGA             Elections              one_off    quadratic                  Georgia Legislature race winner?
+  KXSTEAMPRICE             Financials             one_off    quadratic                  Steam Machine
+  KXSTEELMON               Commodities            monthly    quadratic                  Steel Monthly Price
+  KXSTEELW                 Commodities            weekly     quadratic                  Steel Weekly Price
+  KXSTOCKX11GAMMABLUE      Entertainment          one_off    quadratic                  Will the average sales price of the XXX on StockX, be above XXX 7 days after release?
+  KXSTOCKX4BLACKCAT        Entertainment          one_off    quadratic                  Will the average sales price of the XXX on StockX, be above XXX 7 days after release?
+  KXSTOCKX8BUGSBUNNY       Entertainment          one_off    quadratic                  Will the average sales price of the XXX on StockX, be above XXX 7 days after release?
+  KXSTOCKXSBKRAMPUS        Entertainment          one_off    quadratic                  Will the average sales price of the XXX on StockX, be above XXX 7 days after release?
+  KXSTRKMAXY               Crypto                 annual     quadratic                  Starknet price high by year-end
+  KXSTRKMINY               Crypto                 annual     quadratic                  Starknet price low by year-end
+  KXSUGARBUSHOPEN          Climate and Weather    annual     quadratic                  Sugarbush opening
+  KXSUGARMON               Commodities            monthly    quadratic                  Sugar Monthly
+  KXSUGARW                 Commodities            weekly     quadratic                  Sugar Weekly
+  KXSWITCH2INCREASE        Financials             one_off    quadratic                  Switch 2 Price Increase
+  KXTARIFFRICEINDIA        Politics               one_off    quadratic                  Tariff rate on Indian rice
+  KXTBCRUNCHWRAP           Economics              monthly    quadratic                  Taco Bell Crunchwrap Supreme price in [month]
+  KXTESTB200               Financials             weekly     quadratic                  Weekly B200 Compute Price
+  KXTHXEGGS                Economics              annual     quadratic                  U.S. egg prices on Thanksgiving
+  KXTOPSONGSKUSUGARHONEYLOVE Entertainment          custom     quadratic                  Sugar honey love total streams
+  KXTORCONDO               Economics              annual     quadratic                  Toronto condo price below $X in [year]?
+  KXTRUFBFST               Economics              daily      quadratic                  Truflation Breakfast Commodity Index
+  KXTRUFEGGS               Economics              monthly    quadratic                  Truflation US CPI Eggs Index
+  KXTRUFGAS                Economics              monthly    quadratic                  Truflation US CPI Gasoline Price Index
+  KXTTFD                   Commodities            daily      quadratic                  Dutch TTF gas daily
+  KXTTFMON                 Commodities            monthly    quadratic                  Dutch TTF gas monthly
+  KXTTFW                   Commodities            weekly     quadratic                  Dutch TTF gas weekly
+  KXUCLCORNERS             Sports                 custom     quadratic                  UCL Corners
+  KXUCLTCORNERS            Sports                 custom     quadratic                  Champions League Team Corners
+  KXUEFASCCORNERS          Sports                 custom     quadratic                  Total Corners
+  KXUEFASCTCORNERS         Sports                 custom     quadratic                  Team Corners
+  KXUSCORNYIELD            Economics              one_off    quadratic                  U.S. corn yield
+  KXUSEDCARPRICE           Economics              annual     quadratic                  Average U.S. used car price
+  KXUSGBEEF                Economics              monthly    quadratic                  US ground beef consumer price in [month]
+  KXUSHOME                 Economics              monthly    quadratic                  Median US New Home Price
+  KXUSOPENPRICE            Financials             one_off    quadratic                  US Open Ticket Prices
+  KXUTHOMEPRICE            Economics              one_off    quadratic                  Utah House Price Index
+  KXUTILITYERCOT           Economics              one_off    quadratic                  Texas electricity prices
+  KXUTILITYNYC             Economics              one_off    quadratic                  NYC electricity prices
+  KXUTILITYPJMWEST         Economics              one_off    quadratic                  PJM West electricity prices
+  KXUTILITYSOCAL           Economics              one_off    quadratic                  SoCal electricity prices
+  KXVANCONDO               Economics              annual     quadratic                  Will the average Vancouver condo price fall below X by year-end?
+  KXVERARELEASE            Commodities            one_off    quadratic                  Vera /rubin release
+  KXVOTEPERCENTCOTTONGOP   Elections              one_off    quadratic                  Tom Cotton percent of vote in the Arkansas GOP primary?
+  KXWASDESTATCORN          Climate and Weather    one_off    quadratic                  Corn
+  KXWCCORNERS              Sports                 custom     quadratic                  World Cup Corners
+  KXWCPRICE                Financials             one_off    quadratic                  World Cup Ticket Prices
+  KXWCTCORNERS             Sports                 custom     quadratic                  World Cup Team Corners
+  KXWENBACONATOR           Economics              monthly    quadratic                  Average price of a Wendy's Baconator in [month]
+  KXWHEAT                  Economics              monthly    quadratic                  Average wheat price
+  KXWHEATD                 Commodities            daily      quadratic                  Wheat Daily
+  KXWHEATMON               Commodities            monthly    quadratic                  Wheat Monthly
+  KXWHEATW                 Commodities            weekly     quadratic                  Wheat Weekly
+  KXWHENGOLD               Commodities            one_off    quadratic                  When will Gold hit price
+  KXWHENWTI                Commodities            one_off    quadratic                  When will WTI hit price
+  KXWICORNYIELD            Economics              one_off    quadratic                  Wisconsin corn yield
+  KXWTI                    Commodities            daily      quadratic                  WTI oil on day
+  KXWTI15M                 Commodities            fifteen_min quadratic                  WTI 15-minute
+  KXWTIDIRY                Commodities            annual     quadratic                  WTIDIRY
+  KXWTIE                   Commodities            custom     quadratic                  WTI oil election day
+  KXWTIEU                  Commodities            custom     quadratic                  WTI oil up after election
+  KXWTIH                   Commodities            hourly     quadratic                  WTI Hourly
+  KXWTIMAX                 Commodities            annual     quadratic                  WTI oil high
+  KXWTIMAXM                Commodities            one_off    quadratic                  WTI oil monthly high
+  KXWTIMIN                 Commodities            annual     quadratic                  WTI oil low
+  KXWTIMINM                Commodities            one_off    quadratic                  WTI oil monthly low
+  KXWTIMONTHLY             Commodities            monthly    quadratic                  WTI oil monthly
+  KXWTIW                   Commodities            weekly     quadratic                  WTI oil weekly range
+  KXWTIWHEN                Commodities            one_off    quadratic                  WTI When
+  KXXLMD                   Crypto                 daily      quadratic                  XLM price Above/below
+  KXXRPD                   Crypto                 hourly     quadratic                  XRP Price above/below
+  NGAS                     Economics              monthly    quadratic                  Natural gas price max and min monthly
+  NGASMAX                  Economics              annual     quadratic                  Natural gas price peak
+  NGASW                    Economics              weekly     quadratic                  Natural gas price max and min weekly
+  OIL                      Economics              monthly    quadratic                  Price of oil monthly
+  OILW                     Economics              weekly     quadratic                  Price of oil weekly
+  RENTNYCM                 Economics              monthly    quadratic                  Rent price increase in NYC monthly
+  RENTNYCY                 Economics              annual     quadratic                  Rent price increase in NYC yearly
+  RUBLE                    Economics              weekly     quadratic                  Price of Ruble
+  WHEAT                    Economics              monthly    quadratic                  Average wheat price

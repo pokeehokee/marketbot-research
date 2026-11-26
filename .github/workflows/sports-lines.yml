@@ -1,0 +1,42 @@
+name: Sports vs book lines (public research repo)
+
+# Idea #15: Kalshi game-winner quotes at tip-off against ESPN's published
+# moneyline. Public, keyless reads only (Kalshi and ESPN); no secret is
+# referenced anywhere in this file. Triggered by editing research/discovery/SPORTS
+# on main. Outputs are committed back to the branch.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/discovery/SPORTS"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sports-lines
+  cancel-in-progress: false
+
+jobs:
+  sports:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read parameters
+        id: p
+        run: grep -E '^(days|tag)=' research/discovery/SPORTS >> "$GITHUB_OUTPUT"
+      - name: Tests
+        run: python3 -m unittest discover -s research/discovery -p 'test_*.py'
+      - name: Run
+        run: |
+          timeout 6600 python3 -I research/discovery/sports_lines.py \
+            --days "${{ steps.p.outputs.days }}" --tag "${{ steps.p.outputs.tag }}"
+      - name: Commit outputs back to this branch
+        if: always()
+        run: |
+          git config user.name "sports-lines"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/discovery/out
+          git commit -m "sports lines output: ${{ steps.p.outputs.tag }}" || exit 0
+          for i in 1 2 3 4; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 9; done

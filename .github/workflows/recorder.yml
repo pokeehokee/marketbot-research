@@ -1,0 +1,36 @@
+name: Recorder (Gemini, Polymarket, PredictIt snapshots)
+
+# Venues with no public price history are recorded forward. Read-only, unauthenticated, GET
+# only: no secret is referenced in this file. Each run is one snapshot, kept as an artifact for
+# 7 days; compact.yml merges each UTC day into release assets that do not expire.
+# GitHub runs schedules best-effort, so a dropped fire costs 10 minutes, not a day.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: recorder
+  cancel-in-progress: false
+
+jobs:
+  snap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Name
+        id: n
+        run: echo "name=snap-$(date -u +%Y%m%d-%H%M)-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
+      - name: Snapshot
+        run: timeout 420 python3 -I research/recorders/record.py --out "snap/${{ steps.n.outputs.name }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ steps.n.outputs.name }}
+          path: snap/${{ steps.n.outputs.name }}
+          retention-days: 7
+          if-no-files-found: warn

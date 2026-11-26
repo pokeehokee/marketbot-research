@@ -1,0 +1,39 @@
+name: ForecastEx bias #69 (public research repo)
+
+# What can each other venue's PUBLIC data support? Read-only, unauthenticated, GET only:
+# no secret is referenced anywhere in this file. Triggered by editing research/platforms/FX69
+# on main.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/platforms/FX69"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: forecastex-69
+  cancel-in-progress: false
+
+jobs:
+  score:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read parameters
+        id: p
+        run: grep -E '^(tag|days)=' research/platforms/FX69 >> "$GITHUB_OUTPUT"
+      - name: Tests
+        run: python3 -m unittest discover -s research/platforms -p 'test_*.py'
+      - name: Pull and score
+        run: timeout 1500 python3 -I research/platforms/forecastex_bias.py --tag "${{ steps.p.outputs.tag }}" --days "${{ steps.p.outputs.days || 90 }}"
+      - name: Commit outputs back to this branch
+        if: always()
+        run: |
+          git config user.name "forecastex-69"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/platforms/out
+          git commit -m "forecastex 69 output: ${{ steps.p.outputs.tag }}" || exit 0
+          for i in 1 2 3 4; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 7; done

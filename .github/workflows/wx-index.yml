@@ -1,0 +1,42 @@
+name: Weather index lead (public research repo)
+
+# Idea #66: Kalshi's own public minute index against the hourly temperature markets.
+# Read-only and unauthenticated: no secret is referenced anywhere in this file.
+# Triggered by editing research/discovery/WXINDEX on main.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/discovery/WXINDEX"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wx-index
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read parameters
+        id: p
+        run: grep -E '^(tag|series|days|max)=' research/discovery/WXINDEX >> "$GITHUB_OUTPUT"
+      - name: Tests
+        run: python3 -m unittest discover -s research/discovery -p 'test_*.py'
+      - name: Pull
+        run: |
+          timeout 8400 python3 -I research/discovery/wx_index.py --tag "${{ steps.p.outputs.tag }}" \
+            --series "${{ steps.p.outputs.series }}" --days "${{ steps.p.outputs.days || 21 }}" \
+            --max-markets "${{ steps.p.outputs.max || 3000 }}"
+      - name: Commit outputs back to this branch
+        if: always()
+        run: |
+          git config user.name "wx-index"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/discovery/out
+          git commit -m "wx index output: ${{ steps.p.outputs.tag }}" || exit 0
+          for i in 1 2 3 4; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 7; done

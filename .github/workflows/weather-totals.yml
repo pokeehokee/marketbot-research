@@ -1,0 +1,52 @@
+name: Weather vs football totals (public research repo)
+
+# Idea #17: pulls the football over/under series' settled history and trades
+# (series_probe.py), then scores them against stadium wind (weather_totals.py).
+# Public, keyless reads only (Kalshi, ESPN, Open-Meteo); no secret is referenced
+# anywhere in this file. Triggered by editing research/discovery/WEATHER on a
+# claude/* branch, never on main. Outputs are committed back to the branch.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/discovery/WEATHER"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weather-totals
+  cancel-in-progress: false
+
+jobs:
+  totals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read parameters
+        id: p
+        run: grep -E '^(tag|find|series|max|pull)=' research/discovery/WEATHER >> "$GITHUB_OUTPUT"
+      - name: Tests
+        run: python3 -m unittest discover -s research/discovery -p 'test_*.py'
+      - name: Pull the series
+        # pull=0 re-scores the pull already committed under the same tag (the
+        # pull takes hours, the scoring minutes).
+        if: steps.p.outputs.pull != '0'
+        run: |
+          timeout 15000 python3 -I research/discovery/series_probe.py \
+            --tag "${{ steps.p.outputs.tag }}" --find "${{ steps.p.outputs.find }}" \
+            --series "${{ steps.p.outputs.series }}" --max-markets "${{ steps.p.outputs.max }}"
+      - name: Score against wind
+        run: |
+          timeout 3000 python3 -I research/discovery/weather_totals.py --tag "${{ steps.p.outputs.tag }}" \
+            --markets "research/discovery/out/probe-${{ steps.p.outputs.tag }}-markets.csv.gz" \
+            --trades "research/discovery/out/probe-${{ steps.p.outputs.tag }}-trades.csv.gz"
+      - name: Commit outputs back to this branch
+        if: always()
+        run: |
+          git config user.name "weather-totals"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/discovery/out
+          git commit -m "weather totals output: ${{ steps.p.outputs.tag }}" || exit 0
+          for i in 1 2 3 4; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 11; done

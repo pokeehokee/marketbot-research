@@ -1,0 +1,43 @@
+name: Gas wholesale-lead model (public research repo)
+
+# Round-2 idea #25: price every traded AAA gas strike with a zero-lookahead
+# forecast that uses FRED's public wholesale gasoline series. Reads the trade
+# tape the series probe already committed; touches no Kalshi endpoint and no
+# secret. Triggered by editing research/discovery/GAS on a claude/* branch.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/discovery/GAS"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: gas-lead
+  cancel-in-progress: false
+
+jobs:
+  model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read parameters
+        id: p
+        run: grep -E '^tag=' research/discovery/GAS >> "$GITHUB_OUTPUT"
+      - name: Tests
+        run: cd research/discovery && python3 -m unittest discover -p 'test_*.py'
+      - name: Model
+        run: |
+          cd research/discovery
+          timeout 4800 python3 -I gas_lead.py --tag "${{ steps.p.outputs.tag }}" \
+            --markets out/probe-gas-1-markets.csv.gz --trades out/probe-gas-1-trades.csv.gz
+      - name: Commit outputs back to this branch
+        if: always()
+        run: |
+          git config user.name "gas-lead"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/discovery/out
+          git commit -m "gas lead output: ${{ steps.p.outputs.tag }}" || exit 0
+          for i in 1 2 3 4; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 7; done

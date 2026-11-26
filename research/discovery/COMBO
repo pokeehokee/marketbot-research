@@ -1,0 +1,6 @@
+# Editing this file on a claude/* branch dispatches the combo-tape study for
+# round-2 idea #26 (.github/workflows/combo-tape.yml). Fields: days budget keep tag
+days=28
+budget=300
+keep=25
+tag=combo-1

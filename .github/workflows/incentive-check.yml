@@ -1,0 +1,29 @@
+name: Incentive pool check (public research repo)
+
+# Round-2 idea #44. Two public, unauthenticated GETs; no secret referenced.
+# Triggered by editing research/discovery/INCENTIVES on a claude/* branch.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/discovery/INCENTIVES"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read
+        run: python3 -I research/discovery/incentive_check.py --tag "$(grep -E '^tag=' research/discovery/INCENTIVES | cut -d= -f2)"
+      - name: Commit output back to this branch
+        if: always()
+        run: |
+          git config user.name "incentive-check"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/discovery/out
+          git commit -m "incentive check output" || exit 0
+          for i in 1 2 3 4; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 7; done

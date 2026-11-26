@@ -1,0 +1,6 @@
+# Editing this file on a claude/* branch dispatches the #40 study (BTC hourly
+# ranges, KXBTC, with KXBTCD as control): .github/workflows/ladder-kxbtc.yml.
+# Fields: days budget tag
+days=28
+budget=300
+tag=ladder40-1

@@ -1,0 +1,48 @@
+name: Series probe (public research repo)
+
+# One series' full settled history and trade tape, for ideas that settle too
+# rarely for the 28-day screen. Read-only and unauthenticated: no secret is
+# referenced anywhere in this file. Triggered by editing research/discovery/PROBE
+# on main. Outputs are committed back to the branch.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/discovery/PROBE"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: series-probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read probe parameters
+        id: p
+        run: |
+          grep -E '^(tag|find|series|rules|max|tre)=' research/discovery/PROBE >> "$GITHUB_OUTPUT"
+      - name: Tests
+        run: python3 -m unittest discover -s research/discovery -p 'test_*.py'
+      - name: Probe
+        run: |
+          timeout 6600 python3 -I research/discovery/series_probe.py \
+            --tag "${{ steps.p.outputs.tag }}" --find "${{ steps.p.outputs.find }}" \
+            --series "${{ steps.p.outputs.series }}" --rules-only "${{ steps.p.outputs.rules }}" \
+            --max-markets "${{ steps.p.outputs.max || 4000 }}" --ticker-re "${{ steps.p.outputs.tre }}"
+      - name: Score draws (idea #34)
+        if: startsWith(steps.p.outputs.tag, 'draws')
+        run: python3 -I research/discovery/score_draws.py "research/discovery/out/probe-${{ steps.p.outputs.tag }}" | tee "research/discovery/out/probe-${{ steps.p.outputs.tag }}-score.txt"
+      - name: Commit outputs back to this branch
+        if: always()
+        run: |
+          git config user.name "series-probe"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/discovery/out
+          git commit -m "series probe output: ${{ steps.p.outputs.tag }}" || exit 0
+          for i in 1 2 3 4; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 7; done

@@ -1,0 +1,42 @@
+name: FX spot lead (public research repo)
+
+# Idea #67: free FX spot (Dukascopy) against the 15-minute FX markets.
+# Read-only and unauthenticated: no secret is referenced anywhere in this file.
+# Triggered by editing research/discovery/FXLEAD on main.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/discovery/FXLEAD"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fx-lead
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read parameters
+        id: p
+        run: grep -E '^(tag|series|days|max)=' research/discovery/FXLEAD >> "$GITHUB_OUTPUT"
+      - name: Tests
+        run: python3 -m unittest discover -s research/discovery -p 'test_*.py'
+      - name: Pull
+        run: |
+          timeout 8400 python3 -I research/discovery/fx_lead.py --tag "${{ steps.p.outputs.tag }}" \
+            --series "${{ steps.p.outputs.series }}" --days "${{ steps.p.outputs.days || 14 }}" \
+            --max-markets "${{ steps.p.outputs.max || 3000 }}"
+      - name: Commit outputs back to this branch
+        if: always()
+        run: |
+          git config user.name "fx-lead"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/discovery/out
+          git commit -m "fx lead output: ${{ steps.p.outputs.tag }}" || exit 0
+          for i in 1 2 3 4; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 7; done

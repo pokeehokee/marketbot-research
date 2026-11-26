@@ -1,0 +1,55 @@
+name: Compact recorder snapshots into a daily release asset
+
+# Merges one UTC day of recorder artifacts into <venue>-YYYYMMDD.csv.gz and attaches them to
+# the release data-YYYYMM (created on first use). Release assets do not count against the git
+# history, so a month of snapshots does not bloat the repository. Uses only GITHUB_TOKEN.
+on:
+  schedule:
+    - cron: "40 0 * * *"
+  workflow_dispatch:
+    inputs:
+      day:
+        description: "UTC day YYYYMMDD (default: yesterday)"
+        required: false
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: compact
+  cancel-in-progress: false
+
+jobs:
+  compact:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Day
+        id: d
+        run: |
+          d="${{ github.event.inputs.day }}"
+          [ -n "$d" ] || d=$(date -u -d yesterday +%Y%m%d)
+          echo "day=$d" >> "$GITHUB_OUTPUT"
+          echo "month=${d:0:6}" >> "$GITHUB_OUTPUT"
+      - name: Download that day's snapshots
+        run: |
+          mkdir -p src
+          gh api --paginate "repos/$REPO/actions/artifacts?per_page=100" \
+            --jq '.artifacts[] | select(.expired|not) | select(.name|startswith("snap-${{ steps.d.outputs.day }}-")) | "\(.id) \(.name)"' > list.txt
+          wc -l < list.txt
+          while read -r id name; do
+            gh api "repos/$REPO/actions/artifacts/$id/zip" > a.zip && mkdir -p "src/$name" && unzip -q -o a.zip -d "src/$name"
+          done < list.txt
+      - name: Merge
+        run: python3 -I research/recorders/compact.py --src src --day "${{ steps.d.outputs.day }}" --out merged
+      - name: Attach to the month's release
+        run: |
+          tag="data-${{ steps.d.outputs.month }}"
+          gh release view "$tag" -R "$REPO" >/dev/null 2>&1 || \
+            gh release create "$tag" -R "$REPO" --title "$tag" --notes "Daily recorder snapshots for ${{ steps.d.outputs.month }}: one gzipped CSV per venue per UTC day. Public market data only."
+          gh release upload "$tag" merged/*.csv.gz -R "$REPO" --clobber

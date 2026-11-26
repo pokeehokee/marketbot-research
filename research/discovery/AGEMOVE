@@ -1,0 +1,5 @@
+# Editing this file on the research branch dispatches the age/move screen
+# (see .github/workflows/age-move-screen.yml). Fields: days budget_minutes tag
+days=28
+budget=300
+tag=agemove-1

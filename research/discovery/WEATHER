@@ -1,0 +1,5 @@
+tag=totals-2
+find=TOTAL
+series=KXNFLTOTAL,KXNCAAFTOTAL
+max=60000
+pull=1

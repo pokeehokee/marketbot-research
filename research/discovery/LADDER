@@ -1,0 +1,5 @@
+# Editing this file on a claude/* branch dispatches the ladder-tape study for
+# round-2 ideas #21-#24 (.github/workflows/ladder-tape.yml). Fields: days budget tag
+days=28
+budget=300
+tag=ladder-1

@@ -1,0 +1,39 @@
+name: Platform probe (public research repo)
+
+# What can each other venue's PUBLIC data support? Read-only, unauthenticated, GET only:
+# no secret is referenced anywhere in this file. Triggered by editing research/platforms/PROBE
+# on main.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/platforms/PROBE"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: platform-probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read parameters
+        id: p
+        run: grep -E '^(tag|round)=' research/platforms/PROBE >> "$GITHUB_OUTPUT"
+      - name: Tests
+        run: python3 -m unittest discover -s research/platforms -p 'test_*.py'
+      - name: Probe
+        run: timeout 600 python3 -I research/platforms/probe.py --tag "${{ steps.p.outputs.tag }}" --round "${{ steps.p.outputs.round || 1 }}"
+      - name: Commit outputs back to this branch
+        if: always()
+        run: |
+          git config user.name "platform-probe"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/platforms/out
+          git commit -m "platform probe output: ${{ steps.p.outputs.tag }}" || exit 0
+          for i in 1 2 3 4; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 7; done

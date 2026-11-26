@@ -1,0 +1,45 @@
+name: TSA model (public research repo)
+
+# Idea #18: fetch TSA's published daily checkpoint counts, check they reproduce
+# Kalshi's own settlement figure, then price every traded KXTSAW strike with a
+# zero-lookahead nowcast. Reads the trade tape already committed by the series
+# probe; touches no Kalshi endpoint and no secret. Triggered by editing
+# research/discovery/TSA on a claude/* branch.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/discovery/TSA"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: tsa-model
+  cancel-in-progress: false
+
+jobs:
+  model:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read parameters
+        id: p
+        run: grep -E '^(tag|series)=' research/discovery/TSA >> "$GITHUB_OUTPUT"
+      - name: Tests
+        run: python3 -m unittest discover -s research/discovery -p 'test_*.py'
+      - name: Model
+        run: |
+          cd research/discovery
+          timeout 3300 python3 -I tsa_model.py --tag "${{ steps.p.outputs.tag }}" \
+            --series "${{ steps.p.outputs.series }}" \
+            --markets out/probe-tsa-1-markets.csv.gz --trades out/probe-tsa-1-trades.csv.gz
+      - name: Commit outputs back to this branch
+        if: always()
+        run: |
+          git config user.name "tsa-model"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/discovery/out
+          git commit -m "tsa model output: ${{ steps.p.outputs.tag }}" || exit 0
+          for i in 1 2 3 4; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 7; done

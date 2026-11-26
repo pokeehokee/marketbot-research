@@ -1,0 +1,35 @@
+name: Liquidity-pool yield scan (public research repo)
+
+# Round-2 idea #44. Two public, unauthenticated GETs (/incentive_programs and
+# /markets/orderbooks); no secret referenced, nothing placed.
+# Triggered by editing research/discovery/LIP on a claude/* branch.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/discovery/LIP"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan
+        run: |
+          f=research/discovery/LIP
+          python3 -I research/discovery/lip_scan.py \
+            --tag "$(grep -E '^tag=' $f | cut -d= -f2)" \
+            --snapshots "$(grep -E '^snapshots=' $f | cut -d= -f2)" \
+            --gap-min "$(grep -E '^gap=' $f | cut -d= -f2)"
+      - name: Commit output back to this branch
+        if: always()
+        run: |
+          git config user.name "lip-scan"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/discovery/out
+          git commit -m "lip scan output" || exit 0
+          for i in 1 2 3 4; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 7; done

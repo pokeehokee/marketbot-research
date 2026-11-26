@@ -1,0 +1,93 @@
+name: Combo trade tape (public research repo)
+
+# Round-2 idea #26: who earns on Kalshi's combos (parlays), from the public
+# trade tape. Read-only and unauthenticated: no secret is referenced anywhere in
+# this file. Two shards split the sampled hours; each resumes from its cached
+# database. Triggered by editing research/discovery/COMBO on a claude/* branch.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/discovery/COMBO"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: combo-tape
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read parameters
+        id: p
+        run: grep -E '^(days|budget|keep|tag)=' research/discovery/COMBO >> "$GITHUB_OUTPUT"
+      - name: Restore this shard's database (resume)
+        uses: actions/cache/restore@v4
+        with:
+          path: research/discovery/combo_${{ steps.p.outputs.tag }}-${{ matrix.shard }}.db
+          key: combo-${{ steps.p.outputs.tag }}-${{ matrix.shard }}-${{ github.run_id }}
+          restore-keys: combo-${{ steps.p.outputs.tag }}-${{ matrix.shard }}-
+      - name: Tests
+        run: python3 -m unittest discover -s research/discovery -p 'test_*.py'
+      - name: Read the tape
+        run: |
+          set -o pipefail
+          timeout $(( ${{ steps.p.outputs.budget }} * 60 + 900 )) \
+            python3 -I research/discovery/combo_tape.py --shard "${{ matrix.shard }}/2" \
+              --days ${{ steps.p.outputs.days }} --budget-min ${{ steps.p.outputs.budget }} \
+              --keep-pct ${{ steps.p.outputs.keep }} --tag "${{ steps.p.outputs.tag }}-${{ matrix.shard }}" \
+            | tee research/discovery/out/combo-${{ steps.p.outputs.tag }}-${{ matrix.shard }}.log
+      - name: Export
+        if: always()
+        run: |
+          python3 -I research/discovery/combo_tape.py --tag "${{ steps.p.outputs.tag }}-${{ matrix.shard }}" \
+            --export research/discovery/out/combo-${{ steps.p.outputs.tag }}-${{ matrix.shard }}.csv.gz
+      - name: Save this shard's database
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: research/discovery/combo_${{ steps.p.outputs.tag }}-${{ matrix.shard }}.db
+          key: combo-${{ steps.p.outputs.tag }}-${{ matrix.shard }}-${{ github.run_id }}
+      - name: Commit this shard's aggregates
+        if: always()
+        run: |
+          git config user.name "combo-tape"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/discovery/out
+          git commit -m "combo tape output: ${{ steps.p.outputs.tag }} ${{ matrix.shard }}" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep $((i * 7)); done
+
+  score:
+    needs: pull
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Read parameters
+        id: p
+        run: grep -E '^(tag)=' research/discovery/COMBO >> "$GITHUB_OUTPUT"
+      - name: Score
+        run: |
+          git pull origin "${GITHUB_REF_NAME}"
+          python3 -I research/discovery/score_combo.py research/discovery/out/combo-${{ steps.p.outputs.tag }}-*.csv.gz \
+            | tee research/discovery/out/combo-${{ steps.p.outputs.tag }}-score.txt
+          cat research/discovery/out/combo-${{ steps.p.outputs.tag }}-score.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Commit the score
+        run: |
+          git config user.name "combo-tape"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/discovery/out
+          git commit -m "combo tape score: ${{ steps.p.outputs.tag }}" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep $((i * 7)); done

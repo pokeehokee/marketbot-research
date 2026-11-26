@@ -1,0 +1,63 @@
+name: Liquidity-pool fill cost from the tape (public research repo)
+
+# Round-2 idea #44, the cost half: on settled markets whose liquidity pools have
+# closed, does the pool money outweigh what resting orders lost to the takers who
+# filled them? Public, unauthenticated GETs only (/incentive_programs, /series,
+# /markets, /markets/trades, /historical/*); no secret is referenced anywhere in
+# this file and nothing is placed. Resumable from its cached database. Triggered by
+# editing research/discovery/LIPCOST on main.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/discovery/LIPCOST"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lip-cost
+  cancel-in-progress: false
+
+jobs:
+  cost:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read parameters
+        id: p
+        run: grep -E '^(days|budget|tag)=' research/discovery/LIPCOST >> "$GITHUB_OUTPUT"
+      - name: Restore the database (resume)
+        uses: actions/cache/restore@v4
+        with:
+          path: research/discovery/lipcost-${{ steps.p.outputs.tag }}.db
+          key: lipcost-${{ steps.p.outputs.tag }}-${{ github.run_id }}
+          restore-keys: lipcost-${{ steps.p.outputs.tag }}-
+      - name: Tests
+        run: python3 -m unittest discover -s research/discovery -p 'test_*.py'
+      - name: Read the tape
+        run: |
+          set -o pipefail
+          timeout $(( ${{ steps.p.outputs.budget }} * 60 + 900 )) \
+            python3 -I research/discovery/lip_cost.py --days ${{ steps.p.outputs.days }} \
+              --budget-min ${{ steps.p.outputs.budget }} --tag "${{ steps.p.outputs.tag }}"
+      - name: Score
+        if: always()
+        run: |
+          python3 -I research/discovery/lip_cost.py --score --tag "${{ steps.p.outputs.tag }}"
+          cat research/discovery/out/lipcost-${{ steps.p.outputs.tag }}-score.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Save the database
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: research/discovery/lipcost-${{ steps.p.outputs.tag }}.db
+          key: lipcost-${{ steps.p.outputs.tag }}-${{ github.run_id }}
+      - name: Commit output back to this branch
+        if: always()
+        run: |
+          git config user.name "lip-cost"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/discovery/out
+          git commit -m "lip cost output: ${{ steps.p.outputs.tag }}" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep $((i * 7)); done

@@ -1,0 +1,68 @@
+name: Age and move screen, ideas #13 and #20 (public research repo)
+
+# Kalshi's public trade tape, every settled market, priced against its result.
+# Read-only and unauthenticated: no secret is referenced anywhere in this file.
+# The Claude session that wrote it cannot reach Kalshi from its sandbox, so the
+# measurement runs here and the AGGREGATES (not the raw tape) are committed back
+# to the same research branch for scoring. Triggered by editing
+# research/discovery/AGEMOVE on main.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/discovery/AGEMOVE"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: age-move-screen
+  cancel-in-progress: false
+
+jobs:
+  screen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read run parameters
+        id: p
+        run: |
+          grep -E '^(days|budget|tag)=' research/discovery/AGEMOVE >> "$GITHUB_OUTPUT"
+      - name: Restore a previous run's database (resume)
+        uses: actions/cache/restore@v4
+        with:
+          path: research/discovery/age_move.db
+          key: agemove-${{ steps.p.outputs.tag }}-${{ github.run_id }}
+          restore-keys: agemove-${{ steps.p.outputs.tag }}-
+      - name: Tests
+        run: python3 -m unittest discover -s research/discovery -p 'test_*.py' -v
+      - name: Sample the tape
+        run: |
+          timeout $(( ${{ steps.p.outputs.budget }} * 60 + 600 )) \
+            python3 -I research/discovery/age_move_screen.py \
+              --days ${{ steps.p.outputs.days }} --stride 5 --budget-min ${{ steps.p.outputs.budget }} \
+            | tee research/discovery/out/sample-${{ steps.p.outputs.tag }}.log
+      - name: Export and score
+        if: always()
+        run: |
+          python3 -I research/discovery/age_move_screen.py \
+            --export research/discovery/out/${{ steps.p.outputs.tag }}
+          python3 -I research/discovery/score_age_move.py \
+            research/discovery/out/${{ steps.p.outputs.tag }} \
+            | tee research/discovery/out/score-${{ steps.p.outputs.tag }}.txt
+          cat research/discovery/out/score-${{ steps.p.outputs.tag }}.txt >> "$GITHUB_STEP_SUMMARY" || true
+      - name: Save the database
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: research/discovery/age_move.db
+          key: agemove-${{ steps.p.outputs.tag }}-${{ github.run_id }}
+      - name: Commit aggregates back to this branch
+        if: always()
+        run: |
+          git config user.name "age-move-screen"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/discovery/out
+          git commit -m "age/move screen output: ${{ steps.p.outputs.tag }}" || exit 0
+          for i in 1 2 3; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 5; done

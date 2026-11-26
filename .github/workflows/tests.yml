@@ -1,0 +1,27 @@
+name: Tests
+
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Every research suite
+        run: |
+          n=0
+          for d in research/*/; do
+            ls "$d"test_*.py >/dev/null 2>&1 || continue
+            python3 -m unittest discover -s "$d" -p 'test_*.py' || exit 1
+            n=$((n+1))
+          done
+          echo "suites run: $n"; [ "$n" -ge 3 ]

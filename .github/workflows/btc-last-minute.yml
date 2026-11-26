@@ -1,0 +1,58 @@
+name: BTC last minute (public research repo)
+
+# Idea #68: does Kalshi's last BTC minute pay at any speed? Kraken public trades as a BRTI proxy.
+# Read-only and unauthenticated: no secret is referenced anywhere in this file.
+# Triggered by editing research/discovery/BTCLAST on main.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/discovery/BTCLAST"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: btc-last-minute
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 140
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read parameters
+        id: p
+        run: grep -E '^(tag|series|days|near)=' research/discovery/BTCLAST >> "$GITHUB_OUTPUT"
+      - name: Tests
+        run: python3 -m unittest discover -s research/discovery -p 'test_*.py'
+      - name: Pull
+        run: |
+          timeout 6900 python3 -I research/discovery/btc_last_minute.py --tag "${{ steps.p.outputs.tag }}" \
+            --series "${{ steps.p.outputs.series }}" --days "${{ steps.p.outputs.days || 10 }}" \
+            --near "${{ steps.p.outputs.near || 400 }}"
+      # The raw prints (~8M rows) are too big to commit and were lost once when the old in-memory
+      # scorer took the runner down. Keep them as an artifact before anything else can fail.
+      - name: Keep the raw prints
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: btc-${{ steps.p.outputs.tag }}-trades
+          path: research/discovery/out/btc-${{ steps.p.outputs.tag }}-trades.csv.gz
+          retention-days: 5
+          if-no-files-found: ignore
+      - name: Score (streaming, two passes, no prints held)
+        if: always()
+        run: |
+          f="research/discovery/out/btc-${{ steps.p.outputs.tag }}-trades.csv.gz"
+          [ -f "$f" ] && timeout 1800 python3 -I research/discovery/score_btc_last_minute.py "$f" \
+            > "research/discovery/out/btc-${{ steps.p.outputs.tag }}-score.txt" 2>&1 || true
+      - name: Commit outputs back to this branch
+        if: always()
+        run: |
+          git config user.name "btc-last-minute"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/discovery/out ":!research/discovery/out/*-trades.csv.gz"
+          git commit -m "btc last minute output: ${{ steps.p.outputs.tag }}" || exit 0
+          for i in 1 2 3 4; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep 7; done

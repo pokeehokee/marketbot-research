@@ -138,6 +138,8 @@ class TestBooks(unittest.TestCase):
         ms = [{"slug": "a", "endDate": "2026-11-26T05:00:00Z"}, {"slug": "b", "endDate": "2026-11-28T00:00:00Z"},
               {"slug": "c", "endDate": "2026-11-26T01:00:00Z", "closed": True}, {"slug": "d", "endDate": "x"}]
         self.assertEqual(R.pmus_targets(ms, now), ["a"])
+        game = [{"slug": "g", "endDate": "2026-12-03T00:00:00Z", "gameStartTime": "2026-11-26T02:00:00Z"}]
+        self.assertEqual(R.pmus_targets(game, now), ["g"])        # endDate days out, game tonight
 
 
 class TestSparse(unittest.TestCase):

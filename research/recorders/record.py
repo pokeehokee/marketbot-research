@@ -19,6 +19,7 @@ write the book down while it exists. One run = one snapshot of every venue below
              The orderbook carries ONLY bids per side; the YES ask is 1 - best NO bid.
   polymarket active international markets (paged): best bid/ask, last, volume, outcome prices
   pm_us      Polymarket US markets: outcome prices as listed
+  pm_us_top  Polymarket US best bid / ask from the listing itself, every open market
   pm_us_bk   Polymarket US full books (/v1/markets/{slug}/book) for markets ending within 24 h.
              Its price-history endpoint keeps top-of-book quotes, so only DEPTH is recorded here.
              Thursday 6-8 AM ET maintenance empties the books: drop that window when scoring.
@@ -420,7 +421,7 @@ def fetch_pmus():
         # unfiltered, the listing is all CLOSED markets (2,599 of 2,599 on 2026-11-26)
         r = P.get(PMUS, {"limit": 200, "offset": off, "closed": "false", "active": "true"})
         return r if isinstance(r, list) else (r.get("markets") or r.get("data") or [])
-    LAST_PMUS[:] = paged(f, lambda m: m.get("id"), 200, 20)
+    LAST_PMUS[:] = paged(f, lambda m: m.get("id"), 200, 60)   # 20 pages stopped at exactly 4,000
     return LAST_PMUS
 
 
@@ -434,12 +435,17 @@ def pmus_targets(markets, now_ts, hours=PMUS_BOOK_HOURS, cap=PMUS_BOOK_MAX):
     for m in markets:
         if m.get("closed") or not m.get("slug"):
             continue
-        try:
-            end = datetime.fromisoformat((m.get("endDate") or "").replace("Z", "+00:00")).timestamp()
-        except ValueError:
-            continue
-        if 0 < end - now_ts <= hours * 3600:
-            out.append((end, m["slug"]))
+        # a game's endDate can sit days after the game; the game start is when its book matters
+        best = None
+        for key in ("gameStartTime", "endDate"):
+            try:
+                t = datetime.fromisoformat((m.get(key) or "").replace("Z", "+00:00")).timestamp()
+            except ValueError:
+                continue
+            if 0 < t - now_ts <= hours * 3600 and (best is None or t < best):
+                best = t
+        if best is not None:
+            out.append((best, m["slug"]))
     out.sort()
     return [slug for _, slug in out[:cap]]
 
@@ -461,6 +467,23 @@ def fetch_pmus_books():
 
 
 PMBK_COLS = ["ts", "fetched", "slug", "raw"]
+PMTOP_COLS = ["ts", "slug", "end", "game_start", "best_bid", "best_ask"]
+
+
+def fetch_pmus_top():
+    if not LAST_PMUS:
+        raise RuntimeError("no Polymarket US listing this run")
+    return LAST_PMUS
+
+
+def pmus_top_rows(markets, ts):
+    """The listing's own bestBidQuote / bestAskQuote, every open market, every run: top of book at
+    no extra call. Kept raw for the same reason as the books."""
+    import json
+    raw = lambda v: "" if v is None else json.dumps(v, separators=(",", ":"))
+    return [dict(ts=ts, slug=m.get("slug", ""), end=m.get("endDate") or "", game_start=m.get("gameStartTime") or "",
+                 best_bid=raw(m.get("bestBidQuote")), best_ask=raw(m.get("bestAskQuote")))
+            for m in markets if not m.get("closed")]
 
 
 def pmus_book_rows(got, ts):
@@ -484,6 +507,7 @@ VENUES = [
     ("kalshi_btc_depth", fetch_kalshi_depth, kalshi_depth_rows, KBK_COLS),
     ("polymarket", fetch_pm, pm_rows, PM_COLS),
     ("pm_us", fetch_pmus, pmus_rows, PMUS_COLS),
+    ("pm_us_top", fetch_pmus_top, pmus_top_rows, PMTOP_COLS),
     ("pm_us_books", fetch_pmus_books, pmus_book_rows, PMBK_COLS),
     ("predictit", fetch_pi, pi_rows, PI_COLS),
 ]

@@ -1,0 +1,90 @@
+Coverage (markets listed / read / trades / closes off grid / days read):
+  KXBTCD           120454  46013    6508243    0 grid  3600  11d  INCOMPLETE: 74441 unread
+  KXGOLDH           31964   9062      74969    0 grid  3600   6d  INCOMPLETE: 22902 unread
+  KXPALLADIUMH      45787  11145       5001    0 grid  3600   6d  INCOMPLETE: 34642 unread
+  KXPLATINUMH       57585  14837       2618    0 grid  3600   6d  INCOMPLETE: 42748 unread
+  KXSILVERH         28220   7487      23874    0 grid  3600   6d  INCOMPLETE: 20733 unread
+  KXWTIH            29852   6243      18156    0 grid  3600   6d  INCOMPLETE: 23609 unread
+
+Window 2026-11-15..2026-11-25 (11 settle-days); H1 < 2026-11-20 <= H2.
+EV is per contract to the maker holding the 90-99c side, after maker fee; interval = 95% bootstrap clustered by settle-day; losses = markets the maker lost.
+
+=== CONTROL: KXBTCD, 5-50 min, taker paying 3-10c (the live ladder's trade) ===
+  all   38076426 ct  3461493/d  EV  +0.45c [ -0.42, +1.21]  ratio 0.93  maker-loss events 760/13610
+  H1    16809960 ct  3361992/d  EV  +1.16c [ +0.78, +1.58]  ratio 0.81  maker-loss events 268/5777
+  H2    21266466 ct  3544411/d  EV  -0.11c [ -1.34, +1.18]  ratio 1.02  maker-loss events 492/7833
+  control does NOT resolve it: FAILs below are not kills (account: +1.49c/contract)
+
+=== HEADLINE (pre-registered) ===
+
+#21 crypto 15m
+
+#22 equity index
+
+#23 commodity 15m
+
+#24 FX/rates 15m
+
+#40 BTC hourly ranges
+
+#70 coffee
+
+#71 ags and softs daily
+
+#72 metals and oil hourly
+  5-15m  01-02  fail
+      all      10955 ct     1826/d  EV  +1.61c [ +1.46, +1.71]  ratio 0.01  maker-loss events 1/126
+      H1        4461 ct     2230/d  EV  +1.54c [ +1.53, +1.88]  ratio 0.00  maker-loss events 0/48
+      H2        6495 ct     1624/d  EV  +1.66c [ +1.31, +1.72]  ratio 0.01  maker-loss events 1/78
+  5-15m  03-05  fail
+      all      26584 ct     4431/d  EV  +0.53c [ -3.36, +2.44]  ratio 0.87  maker-loss events 10/348
+      H1        6815 ct     3408/d  EV  -1.47c [-30.30, +0.17]  ratio 1.36  maker-loss events 3/104
+      H2       19769 ct     4942/d  EV  +1.22c [ -2.90, +4.19]  ratio 0.70  maker-loss events 7/244
+  5-15m  06-10  fail
+      all      28975 ct     4829/d  EV  +0.97c [ -3.23, +2.23]  ratio 0.88  maker-loss events 39/503
+      H1        9133 ct     4567/d  EV  +0.36c [-61.89, +2.77]  ratio 0.95  maker-loss events 7/142
+      H2       19842 ct     4961/d  EV  +1.26c [ +0.30, +1.99]  ratio 0.84  maker-loss events 32/361
+  15-50m 01-02  fail
+      all       5525 ct      921/d  EV  +1.59c [ +1.32, +1.73]  ratio 0.01  maker-loss events 1/157
+      H1         995 ct      497/d  EV  +1.46c [ +1.44, +1.60]  ratio 0.06  maker-loss events 1/26
+      H2        4530 ct     1132/d  EV  +1.62c [ +1.24, +1.81]  ratio 0.00  maker-loss events 0/131
+  15-50m 03-05  fail
+      all      32146 ct     5358/d  EV  +2.99c [ +1.80, +3.85]  ratio 0.30  maker-loss events 11/391
+      H1       11876 ct     5938/d  EV  +3.74c [ +3.72, +3.90]  ratio 0.11  maker-loss events 4/127
+      H2       20270 ct     5067/d  EV  +2.55c [ +1.07, +4.10]  ratio 0.41  maker-loss events 7/264
+  15-50m 06-10  fail
+      all      49439 ct     8240/d  EV  +0.78c [ -6.66, +3.87]  ratio 0.90  maker-loss events 57/851
+      H1       18991 ct     9495/d  EV  +2.33c [-32.05, +4.83]  ratio 0.68  maker-loss events 20/273
+      H2       30448 ct     7612/d  EV  -0.19c [ -5.03, +3.52]  ratio 1.02  maker-loss events 37/578
+  <1m    01-02  info only (last minute)
+      all      49480 ct     8247/d  EV  +0.93c [ +0.39, +1.17]  ratio 0.18  maker-loss events 1/181
+      H1       11492 ct     5746/d  EV  +1.15c [ +1.14, +2.00]  ratio 0.00  maker-loss events 0/46
+      H2       37988 ct     9497/d  EV  +0.86c [ +0.14, +1.18]  ratio 0.23  maker-loss events 1/135
+  <1m    03-05  info only (last minute)
+      all      11515 ct     1919/d  EV  +1.57c [ -1.12, +3.23]  ratio 0.60  maker-loss events 6/196
+      H1        1780 ct      890/d  EV  +3.24c [ +3.13, +4.99]  ratio 0.17  maker-loss events 1/39
+      H2        9735 ct     2434/d  EV  +1.27c [ -1.71, +3.22]  ratio 0.67  maker-loss events 5/157
+  <1m    06-10  info only (last minute)
+      all      11310 ct     1885/d  EV  -1.35c [ -8.16, +6.51]  ratio 1.17  maker-loss events 16/211
+      H1        2511 ct     1255/d  EV  +5.12c [ +4.77, +7.89]  ratio 0.34  maker-loss events 2/44
+      H2        8799 ct     2200/d  EV  -3.20c [ -9.87, +7.03]  ratio 1.41  maker-loss events 14/167
+
+=== Per series, headline windows pooled, bands 01-10 (detail, not a test) ===
+  KXGOLDH          all      75930 ct    12655/d  EV  -0.69c [ -6.04, +1.50]  ratio 1.12  maker-loss events 79/1012
+                   H1       21612 ct    10806/d  EV  +0.99c [ +0.90, +4.47]  ratio 0.81  maker-loss events 22/342
+                   H2       54318 ct    13580/d  EV  -1.36c [ -8.02, +1.48]  ratio 1.24  maker-loss events 57/670
+  KXPALLADIUMH     all        681 ct      136/d  EV  +4.07c [-16.00, +9.10]  ratio 0.35  maker-loss events 1/18
+                   H1          69 ct       69/d  EV  +9.00c [ +9.00, +9.00]  ratio 0.00  maker-loss events 0/4
+                   H2         612 ct      153/d  EV  +3.52c [-20.55, +9.29]  ratio 0.41  maker-loss events 1/14
+  KXPLATINUMH      all        622 ct      124/d  EV  +6.78c [ +6.39, +8.04]  ratio 0.00  maker-loss events 0/45
+                   H1          11 ct       11/d  EV  +6.30c [ +6.30, +6.30]  ratio 0.00  maker-loss events 0/2
+                   H2         611 ct      153/d  EV  +6.79c [ +6.40, +8.18]  ratio 0.00  maker-loss events 0/43
+  KXSILVERH        all       8948 ct     1491/d  EV  +2.02c [ -1.39, +3.40]  ratio 0.63  maker-loss events 18/424
+                   H1        1043 ct      521/d  EV  -0.27c [ -2.54, +3.73]  ratio 1.05  maker-loss events 5/64
+                   H2        7905 ct     1976/d  EV  +2.32c [ -1.46, +3.62]  ratio 0.58  maker-loss events 13/360
+  KXWTIH           all      67442 ct    11240/d  EV  +3.42c [ -2.74, +5.03]  ratio 0.42  maker-loss events 21/877
+                   H1       29535 ct    14768/d  EV  +2.32c [-29.75, +5.20]  ratio 0.61  maker-loss events 8/308
+                   H2       37907 ct     9477/d  EV  +4.28c [ +1.37, +5.05]  ratio 0.26  maker-loss events 13/569
+
+PASSING headline cells: 0
+Control did not resolve; read every 'fail' as unresolved.

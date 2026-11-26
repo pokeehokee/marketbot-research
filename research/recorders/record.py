@@ -520,8 +520,8 @@ VENUES = [
     ("polymarket", fetch_pm, pm_rows, PM_COLS),
     ("pm_us", fetch_pmus, pmus_rows, PMUS_COLS),
     ("pm_us_top", fetch_pmus_top, pmus_top_rows, PMTOP_COLS),
-    ("pm_us_books", fetch_pmus_books, pmus_book_rows, PMBK_COLS),
     ("predictit", fetch_pi, pi_rows, PI_COLS),
+    ("pm_us_books", fetch_pmus_books, pmus_book_rows, PMBK_COLS),  # last: the slowest, so a timeout costs only this one
 ]
 
 

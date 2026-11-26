@@ -417,7 +417,8 @@ def fetch_pm():
 
 def fetch_pmus():
     def f(off):
-        r = P.get(PMUS, {"limit": 200, "offset": off})
+        # unfiltered, the listing is all CLOSED markets (2,599 of 2,599 on 2026-11-26)
+        r = P.get(PMUS, {"limit": 200, "offset": off, "closed": "false", "active": "true"})
         return r if isinstance(r, list) else (r.get("markets") or r.get("data") or [])
     LAST_PMUS[:] = paged(f, lambda m: m.get("id"), 200, 20)
     return LAST_PMUS

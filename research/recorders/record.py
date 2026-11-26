@@ -422,10 +422,10 @@ PMUS_FROM = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 def fetch_pmus():
     def f(off):
         # unfiltered, the listing is all CLOSED markets (2,599 of 2,599 on 2026-11-26)
-        # and in id order the newest markets fall past any page cap (newest createdAt read: Oct 12),
-        # so read from now forward by end date: what closes soonest is what a cap must not lose
+        # and it comes back in id order, so a page cap drops the NEWEST markets (newest read: Oct 12)
+        # orderBy is ignored (checked 2026-11-26) but the date filters are honoured
         r = P.get(PMUS, {"limit": 200, "offset": off, "closed": "false", "active": "true",
-                         "endDateMin": PMUS_FROM, "orderBy": "endDate", "orderDirection": "asc"})
+                         "endDateMin": PMUS_FROM})
         return r if isinstance(r, list) else (r.get("markets") or r.get("data") or [])
     LAST_PMUS[:] = paged(f, lambda m: m.get("id"), 200, 60)   # 20 pages stopped at exactly 4,000
     return LAST_PMUS
@@ -457,33 +457,18 @@ def pmus_targets(markets, now_ts, hours=PMUS_BOOK_HOURS, cap=PMUS_BOOK_MAX):
 
 
 def fetch_pmus_books():
-    if not LAST_PMUS:
-        raise RuntimeError("no Polymarket US listing this run")
-    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    log(f"    slugs naming {day}: {sum(1 for m in LAST_PMUS if day in (m.get('slug') or ''))}, "
-        f"e.g. {[m.get('slug') for m in LAST_PMUS if day in (m.get('slug') or '')][:3]}")
-    # which query shapes does the gateway honour? one page each, first and last row's dates
-    for label, extra in (("orderBy=createdAt desc", {"orderBy": "createdAt", "orderDirection": "desc"}),
-                         ("orderBy=endDate asc", {"orderBy": "endDate", "orderDirection": "asc"}),
-                         ("order_by=end_date", {"order_by": "end_date", "ascending": "true"}),
-                         ("endDateMin+Max", {"endDateMin": PMUS_FROM, "endDateMax": day + "T23:59:59Z"}),
-                         ("startDateMin", {"startDateMin": day + "T00:00:00Z"}),
-                         ("sports moneyline", {"sportsMarketTypes": "SPORTS_MARKET_TYPE_MONEYLINE",
-                                               "orderBy": "createdAt", "orderDirection": "desc"})):
-        try:
-            r = P.get(PMUS, {"limit": 50, "closed": "false", **extra})
-            ms = r if isinstance(r, list) else (r.get("markets") or [])
-            log(f"    [{label}] {len(ms)} rows; first {ms[0].get('createdAt') if ms else None} / "
-                f"{ms[0].get('endDate') if ms else None} / {ms[0].get('slug') if ms else None}")
-        except RuntimeError as e:
-            log(f"    [{label}] {str(e)[:100]}")
-    gs = [m.get("gameStartTime") for m in LAST_PMUS if m.get("gameStartTime")]
-    ids = [m.get("id") for m in LAST_PMUS]
-    log(f"    {len(LAST_PMUS)} listed; gameStartTime on {len(gs)}, samples {sorted(gs)[-3:]}; "
-        f"createdAt last {sorted(str(m.get('createdAt')) for m in LAST_PMUS)[-1:]}; ids {ids[:2]}..{ids[-2:]}; "
-        f"categories {sorted({str(m.get('category')) for m in LAST_PMUS})[:12]}")
+    # its own query: the main listing is capped in id order, which drops new markets, and only
+    # the endDate filters are honoured. A game whose endDate sits days after kick-off is missed.
+    until = datetime.fromtimestamp(time.time() + PMUS_BOOK_HOURS * 3600, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    def f(off):
+        r = P.get(PMUS, {"limit": 200, "offset": off, "closed": "false", "endDateMin": PMUS_FROM,
+                         "endDateMax": until})
+        return r if isinstance(r, list) else (r.get("markets") or r.get("data") or [])
+    soon = paged(f, lambda m: m.get("id"), 200, 10)
+    targets = pmus_targets(soon, time.time())
+    log(f"    {len(soon)} ending within {PMUS_BOOK_HOURS} h, books read for {len(targets)}")
     got = []
-    for i, slug in enumerate(pmus_targets(LAST_PMUS, time.time())):
+    for i, slug in enumerate(targets):
         if i:
             time.sleep(0.1)          # ~20 req/s allowed; stay well under
         try:

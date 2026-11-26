@@ -416,10 +416,16 @@ def fetch_pm():
     return paged(f, lambda m: m.get("id"), PM_PAGE, 60)
 
 
+PMUS_FROM = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def fetch_pmus():
     def f(off):
         # unfiltered, the listing is all CLOSED markets (2,599 of 2,599 on 2026-11-26)
-        r = P.get(PMUS, {"limit": 200, "offset": off, "closed": "false", "active": "true"})
+        # and in id order the newest markets fall past any page cap (newest createdAt read: Oct 12),
+        # so read from now forward by end date: what closes soonest is what a cap must not lose
+        r = P.get(PMUS, {"limit": 200, "offset": off, "closed": "false", "active": "true",
+                         "endDateMin": PMUS_FROM, "orderBy": "endDate", "orderDirection": "asc"})
         return r if isinstance(r, list) else (r.get("markets") or r.get("data") or [])
     LAST_PMUS[:] = paged(f, lambda m: m.get("id"), 200, 60)   # 20 pages stopped at exactly 4,000
     return LAST_PMUS

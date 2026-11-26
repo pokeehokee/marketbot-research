@@ -459,6 +459,24 @@ def pmus_targets(markets, now_ts, hours=PMUS_BOOK_HOURS, cap=PMUS_BOOK_MAX):
 def fetch_pmus_books():
     if not LAST_PMUS:
         raise RuntimeError("no Polymarket US listing this run")
+    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    log(f"    slugs naming {day}: {sum(1 for m in LAST_PMUS if day in (m.get('slug') or ''))}, "
+        f"e.g. {[m.get('slug') for m in LAST_PMUS if day in (m.get('slug') or '')][:3]}")
+    # which query shapes does the gateway honour? one page each, first and last row's dates
+    for label, extra in (("orderBy=createdAt desc", {"orderBy": "createdAt", "orderDirection": "desc"}),
+                         ("orderBy=endDate asc", {"orderBy": "endDate", "orderDirection": "asc"}),
+                         ("order_by=end_date", {"order_by": "end_date", "ascending": "true"}),
+                         ("endDateMin+Max", {"endDateMin": PMUS_FROM, "endDateMax": day + "T23:59:59Z"}),
+                         ("startDateMin", {"startDateMin": day + "T00:00:00Z"}),
+                         ("sports moneyline", {"sportsMarketTypes": "SPORTS_MARKET_TYPE_MONEYLINE",
+                                               "orderBy": "createdAt", "orderDirection": "desc"})):
+        try:
+            r = P.get(PMUS, {"limit": 50, "closed": "false", **extra})
+            ms = r if isinstance(r, list) else (r.get("markets") or [])
+            log(f"    [{label}] {len(ms)} rows; first {ms[0].get('createdAt') if ms else None} / "
+                f"{ms[0].get('endDate') if ms else None} / {ms[0].get('slug') if ms else None}")
+        except RuntimeError as e:
+            log(f"    [{label}] {str(e)[:100]}")
     gs = [m.get("gameStartTime") for m in LAST_PMUS if m.get("gameStartTime")]
     ids = [m.get("id") for m in LAST_PMUS]
     log(f"    {len(LAST_PMUS)} listed; gameStartTime on {len(gs)}, samples {sorted(gs)[-3:]}; "

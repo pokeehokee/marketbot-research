@@ -32,6 +32,8 @@ G = "https://api.gemini.com/v1/prediction-markets"
 PM = "https://gamma-api.polymarket.com/markets"
 PMUS = "https://gateway.polymarket.us/v1/markets"
 PI = "https://www.predictit.org/api/marketdata/all/"
+PM_PAGE = 100   # gamma caps a page at 100 whatever `limit` asks: the first run asked 500, got
+                # 100 and stopped, reading a full page as the last one
 LOG = []
 
 
@@ -191,10 +193,10 @@ def fetch_gemini_settled():
 
 def fetch_pm():
     def f(off):
-        r = P.get(PM, {"active": "true", "closed": "false", "limit": 500, "offset": off,
+        r = P.get(PM, {"active": "true", "closed": "false", "limit": PM_PAGE, "offset": off,
                        "order": "volume24hr", "ascending": "false"})
         return r if isinstance(r, list) else (r.get("data") or [])
-    return paged(f, lambda m: m.get("id"), 500, 20)
+    return paged(f, lambda m: m.get("id"), PM_PAGE, 60)
 
 
 def fetch_pmus():

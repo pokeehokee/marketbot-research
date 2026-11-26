@@ -446,6 +446,8 @@ def pmus_targets(markets, now_ts, hours=PMUS_BOOK_HOURS, cap=PMUS_BOOK_MAX):
 def fetch_pmus_books():
     if not LAST_PMUS:
         raise RuntimeError("no Polymarket US listing this run")
+    ends = sorted((m.get("endDate") or "") for m in LAST_PMUS if not m.get("closed"))
+    log(f"    {len(ends)} open; endDate earliest {ends[:2]} latest {ends[-1:]}; keys {sorted(LAST_PMUS[0])[:30]}")
     got = []
     for i, slug in enumerate(pmus_targets(LAST_PMUS, time.time())):
         if i:
@@ -493,6 +495,19 @@ def write(path, cols, rows):
         w.writerows(rows)
 
 
+def sparse_columns(rows, cols, below=0.95):
+    """Columns filled on fewer than `below` of rows. A venue field that never populates reads the
+    same as one that says "nothing happened" once it is in a CSV, so it is reported at write time."""
+    if not rows:
+        return ""
+    out = []
+    for c in cols:
+        share = sum(1 for r in rows if r.get(c) not in (None, "")) / len(rows)
+        if share < below:
+            out.append(f"{c}={share:.0%}")
+    return " ".join(out)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", required=True)
@@ -512,6 +527,9 @@ def main(argv=None):
             rows = flat(raw, ts)
             write(os.path.join(a.out, f"{name}.csv.gz"), cols, rows)
             log(f"  {name}: {len(rows)} rows in {time.time() - t0:.1f}s")
+            thin = sparse_columns(rows, cols)
+            if thin:
+                log(f"    sparse columns (share filled): {thin}")
         except Exception as e:  # one venue down must not cost the others their snapshot
             failed += 1
             log(f"  {name}: FAILED {type(e).__name__}: {str(e)[:200]}")

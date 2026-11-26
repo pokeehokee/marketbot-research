@@ -140,6 +140,13 @@ class TestBooks(unittest.TestCase):
         self.assertEqual(R.pmus_targets(ms, now), ["a"])
 
 
+class TestSparse(unittest.TestCase):
+    def test_reports_only_thin_columns(self):
+        rows = [{"a": 1, "b": ""}, {"a": 2, "b": None}, {"a": 0, "b": 5}]
+        self.assertEqual(R.sparse_columns(rows, ["a", "b"]), "b=33%")   # a zero is a value
+        self.assertEqual(R.sparse_columns([], ["a"]), "")
+
+
 class TestCompact(unittest.TestCase):
     def snap(self, root, name, rows, header=("ts", "a")):
         d = os.path.join(root, name); os.makedirs(d)

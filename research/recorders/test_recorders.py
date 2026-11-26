@@ -41,6 +41,20 @@ class TestPaging(unittest.TestCase):
         self.assertEqual(len(R.paged(lambda o: pages.get(o, []), lambda m: m["id"], 2, 50)), 3)
 
 
+    def test_an_error_past_page_one_keeps_the_rows(self):
+        def f(off):
+            if off >= 4:
+                raise RuntimeError("HTTP 422")
+            return [{"id": off}, {"id": off + 1}]
+        self.assertEqual(len(R.paged(f, lambda m: m["id"], 2, 50)), 4)
+
+    def test_an_error_on_page_one_is_a_failure(self):
+        def f(off):
+            raise RuntimeError("HTTP 500")
+        with self.assertRaises(RuntimeError):
+            R.paged(f, lambda m: m["id"], 2, 50)
+
+
 class TestReadOnly(unittest.TestCase):
     def test_writes_are_refused(self):
         with self.assertRaises(RuntimeError):

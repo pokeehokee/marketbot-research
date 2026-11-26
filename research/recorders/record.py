@@ -167,7 +167,14 @@ def paged(fetch, key_of, limit, max_pages):
     (an ignored offset would otherwise loop over page 1 for ever)."""
     rows, seen_first = [], None
     for i in range(max_pages):
-        page = fetch(i * limit)
+        try:
+            page = fetch(i * limit)
+        except RuntimeError as e:
+            if not rows:
+                raise
+            # gamma answers 422 past offset ~2,000: keep what was read, say where it stopped
+            log(f"    stopped at offset {i * limit} with {len(rows)} rows: {str(e)[:80]}")
+            break
         if not page:
             break
         first = key_of(page[0])

@@ -1,0 +1,13 @@
+KXCOCOAD: category Commodities, fee_type quadratic
+KXCORND: category Commodities, fee_type quadratic
+KXSOYBEAND: category Commodities, fee_type quadratic
+KXWHEATD: category Commodities, fee_type quadratic
+KXLCATTLED: category Commodities, fee_type quadratic
+cutoff: {'market_positions_last_updated_ts': '2026-09-27T00:00:00Z', 'market_settled_ts': '2026-09-27T00:00:00Z', 'orders_updated_ts': '2026-11-12T00:00:00Z', 'trades_created_ts': '2026-09-27T00:00:00Z'}
+KXCOCOAD: 0 settled markets, 0 without a yes/no result (skipped)
+KXCORND: 0 settled markets, 0 without a yes/no result (skipped)
+KXSOYBEAND: 0 settled markets, 0 without a yes/no result (skipped)
+KXWHEATD: 0 settled markets, 0 without a yes/no result (skipped)
+KXLCATTLED: 0 settled markets, 0 without a yes/no result (skipped)
+0 markets to read
+done this run: 0 read, 0 failed (retried on resume), 0 still unread

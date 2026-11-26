@@ -3,7 +3,12 @@ name: Recorder (Gemini, Polymarket, PredictIt snapshots)
 # Venues with no public price history are recorded forward. Read-only, unauthenticated, GET
 # only: no secret is referenced in this file. Each run is one snapshot, kept as an artifact for
 # 7 days; compact.yml merges each UTC day into release assets that do not expire.
-# GitHub runs schedules best-effort, so a dropped fire costs 10 minutes, not a day.
+# GitHub runs schedules best-effort, and on this repo the schedule had not fired once in its first
+# 2.5 hours (2026-11-26) while other repos' schedules ran. So each run dispatches the next one
+# itself, paced to 10 minutes; the schedule stays as a restarter if the chain ever breaks.
+# GITHUB_TOKEN may dispatch a workflow (the one event it is allowed to start). Concurrency keeps
+# at most one running and one pending, so a schedule fire landing beside the chain merges into it.
+# To stop the chain: commit research/recorders/STOP to main.
 on:
   schedule:
     - cron: "3-59/10 * * * *"   # off the hour marks, which GitHub drops first under load
@@ -11,6 +16,7 @@ on:
 
 permissions:
   contents: read
+  actions: write     # only to dispatch the next recorder run and the daily compact
 
 concurrency:
   group: recorder
@@ -19,12 +25,14 @@ concurrency:
 jobs:
   snap:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 13   # 7 recording, the rest waiting for the next 10-minute slot
     steps:
       - uses: actions/checkout@v4
       - name: Name
         id: n
-        run: echo "name=snap-$(date -u +%Y%m%d-%H%M)-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "name=snap-$(date -u +%Y%m%d-%H%M)-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
+          echo "start=$(date -u +%s)" >> "$GITHUB_OUTPUT"
       - name: Snapshot
         run: timeout 420 python3 -I research/recorders/record.py --out "snap/${{ steps.n.outputs.name }}"
       - uses: actions/upload-artifact@v4
@@ -34,3 +42,21 @@ jobs:
           path: snap/${{ steps.n.outputs.name }}
           retention-days: 7
           if-no-files-found: warn
+      - name: Dispatch the next run
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -e research/recorders/STOP ]; then echo "STOP present: chain ends here"; exit 0; fi
+          wait=$(( 600 - ($(date -u +%s) - ${{ steps.n.outputs.start }}) ))
+          if [ "$wait" -gt 0 ]; then sleep "$wait"; fi
+          hm=$(date -u +%H%M)
+          if [ "$hm" -ge 0040 ] && [ "$hm" -le 0049 ]; then
+            gh api -X POST "repos/${{ github.repository }}/actions/workflows/compact.yml/dispatches" -f ref=main \
+              && echo "dispatched compact for yesterday"
+          fi
+          for i in 1 2 3 4; do
+            gh api -X POST "repos/${{ github.repository }}/actions/workflows/recorder.yml/dispatches" -f ref=main && exit 0
+            sleep 15
+          done
+          echo "could not dispatch the next run"; exit 1

@@ -1,4 +1,5 @@
 import csv, gzip, os, sys, tempfile, unittest
+from datetime import datetime, timezone
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import record as R, compact as C
 
@@ -61,6 +62,37 @@ class TestReadOnly(unittest.TestCase):
             R.P.get("https://api.gemini.com/v1/prediction-markets/order")
         with self.assertRaises(RuntimeError):
             R.P.get("https://clob.polymarket.com/order")
+
+
+class TestGeminiTrades(unittest.TestCase):
+    def ev(self, ticker, cat, exp, states=("open",)):
+        return {"ticker": ticker, "category": cat, "expiryDate": exp,
+                "contracts": [{"instrumentSymbol": f"GEMI-{ticker}-{i}", "marketState": s}
+                              for i, s in enumerate(states)]}
+
+    def test_targets_soonest_crypto_open_only(self):
+        now = datetime(2026, 11, 26, 20, 0, tzinfo=timezone.utc).timestamp()
+        evs = [self.ev("LATE", "Crypto", "2026-11-26T22:30:00Z"),
+               self.ev("SOON", "Crypto", "2026-11-26T20:30:00Z", ("open", "closed")),
+               self.ev("FAR", "Crypto", "2026-11-27T22:00:00Z"),          # beyond 3h
+               self.ev("PAST", "Crypto", "2026-11-26T19:00:00Z"),         # already expired
+               self.ev("FED", "Economics", "2026-11-26T20:10:00Z")]       # not crypto
+        t = R.trade_targets(evs, now)
+        self.assertEqual([x[1] for x in t], ["GEMI-SOON-0", "GEMI-LATE-0"])
+        self.assertEqual(len(R.trade_targets(evs, now, cap=1)), 1)
+
+    def test_trade_rows_keep_missing_price_empty(self):
+        rows = R.gemini_trade_rows([("S", "E", "X", {"tid": 1, "timestampms": 5, "price": "0",
+                                                      "amount": "3", "type": "buy"})], "ts")
+        self.assertEqual(rows[0]["price"], "")
+        self.assertEqual(rows[0]["taker"], "buy")
+
+    def test_trades_path_is_whitelisted_and_writes_are_not(self):
+        import urllib.parse
+        with self.assertRaises(RuntimeError):
+            R.P.get("https://api.gemini.com/v1/order/new")
+        u = urllib.parse.urlsplit("https://api.gemini.com/v1/trades/GEMI-X")
+        self.assertTrue(any(u.path.startswith(p + "/") for p in R.P.ALLOWED["api.gemini.com"]))
 
 
 class TestCompact(unittest.TestCase):

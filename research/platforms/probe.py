@@ -12,7 +12,8 @@ from datetime import datetime, timedelta, timezone
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "out")
 ALLOWED = {
     "api.gemini.com": ("/v1/prediction-markets/events", "/v1/prediction-markets/maker-rebate/rates",
-                       "/v1/prediction-markets/categories", "/v2/klines"),
+                       "/v1/prediction-markets/categories", "/v2/klines",
+                       "/v1/trades"),  # /v1/trades/{GEMI-...}: prediction prints while a contract is open
     "gamma-api.polymarket.com": ("/markets", "/events", "/public-search"),
     "clob.polymarket.com": ("/prices-history",),
     "data-api.polymarket.com": ("/trades", "/activity"),

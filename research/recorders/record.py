@@ -7,6 +7,11 @@ write the book down while it exists. One run = one snapshot of every venue below
 
   gemini     every active event's contracts: best bid/ask, last, buy/sell per side
   gemini_set events Gemini lists as recently settled: resolution side and settlement value
+  gemini_trd public trade prints (/v1/trades/{symbol}) for open Crypto contracts expiring soonest.
+             Found 2026-11-26: the spot trades endpoint answers for GEMI- prediction symbols while
+             the contract is OPEN (it 400s 'not a valid symbol' once closed), so prints exist only
+             if recorded live. Each run keeps the newest 500 per symbol; duplicates across runs are
+             removed by tid downstream. A page of exactly 500 is logged as possibly saturated.
   polymarket active international markets (paged): best bid/ask, last, volume, outcome prices
   pm_us      Polymarket US markets: outcome prices as listed
   predictit  every contract: best buy/sell for YES and NO, last trade
@@ -191,11 +196,67 @@ def paged(fetch, key_of, limit, max_pages):
 def fetch_gemini():
     def f(off):
         return P.get(G + "/events", {"status": "active", "limit": 500, "offset": off}).get("data") or []
-    return paged(f, lambda e: e.get("ticker"), 500, 10)
+    LAST_GEMINI[:] = paged(f, lambda e: e.get("ticker"), 500, 10)
+    return LAST_GEMINI
 
 
 def fetch_gemini_settled():
     return P.get(G + "/events/recently-settled").get("data") or []
+
+
+GTRD_COLS = ["ts", "symbol", "event", "event_expiry", "tid", "timestampms", "price", "amount",
+             "taker"]
+TRADE_HOURS = 3       # contracts whose event expires within this many hours
+TRADE_MAX = 150       # symbols per run; public REST is 120/min, so the loop paces itself
+TRADE_PACE = 0.55     # seconds between calls
+LAST_GEMINI = []      # the active-events read of this run, reused rather than fetched twice
+
+
+def trade_targets(events, now_ts, hours=TRADE_HOURS, cap=TRADE_MAX):
+    """Open Crypto contracts whose event expires within `hours`, soonest first, at most `cap`."""
+    out = []
+    for e in events:
+        if (e.get("category") or "") != "Crypto":
+            continue
+        try:
+            exp = datetime.fromisoformat((e.get("expiryDate") or "").replace("Z", "+00:00")).timestamp()
+        except ValueError:
+            continue
+        left = exp - now_ts
+        if not 0 < left <= hours * 3600:
+            continue
+        for c in e.get("contracts") or []:
+            if c.get("marketState") == "open" and c.get("instrumentSymbol"):
+                out.append((left, c["instrumentSymbol"], e.get("ticker"), e.get("expiryDate")))
+    out.sort()
+    return out[:cap]
+
+
+def fetch_gemini_trades():
+    if not LAST_GEMINI:
+        raise RuntimeError("no active-events read this run")
+    targets = trade_targets(LAST_GEMINI, time.time())
+    got, saturated = [], 0
+    for i, (_, sym, ev, exp) in enumerate(targets):
+        if i:
+            time.sleep(TRADE_PACE)
+        try:
+            page = P.get("https://api.gemini.com/v1/trades/" + sym, {"limit_trades": 500})
+        except RuntimeError as e:
+            log(f"    {sym}: {str(e)[:80]}")
+            continue
+        if len(page) >= 500:
+            saturated += 1
+        for t in page:
+            got.append((sym, ev, exp, t))
+    log(f"    {len(targets)} symbols, {saturated} returned a full 500-print page")
+    return got
+
+
+def gemini_trade_rows(got, ts):
+    return [dict(ts=ts, symbol=s, event=ev, event_expiry=exp, tid=t.get("tid"),
+                 timestampms=t.get("timestampms"), price=px(t.get("price")), amount=num(t.get("amount")),
+                 taker=t.get("type") or "") for s, ev, exp, t in got]
 
 
 def fetch_pm():
@@ -220,6 +281,7 @@ def fetch_pi():
 VENUES = [
     ("gemini", fetch_gemini, gemini_rows, GEMINI_COLS),
     ("gemini_settled", fetch_gemini_settled, gemini_settled_rows, GEMSET_COLS),
+    ("gemini_trades", fetch_gemini_trades, gemini_trade_rows, GTRD_COLS),
     ("polymarket", fetch_pm, pm_rows, PM_COLS),
     ("pm_us", fetch_pmus, pmus_rows, PMUS_COLS),
     ("predictit", fetch_pi, pi_rows, PI_COLS),

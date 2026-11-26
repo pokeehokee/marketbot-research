@@ -52,10 +52,18 @@ IDEAS = {
                          "KXAUDUSD15M", "KX2YRRATE15M", "KX5YRRATE15M", "KX10YRRATE15M",
                          "KX30YRRATE15M"],
     "#40 BTC hourly ranges": ["KXBTC"],
+    # Pre-registered 2026-11-26, before any coffee or ags tape was read (operator asked
+    # about coffee and similar markets). Same trade, same bands, same pass bar.
+    "#70 coffee": ["KXCOFFEE15M", "KXCOFFEEH", "KXCOFFEED"],
+    "#71 ags and softs daily": ["KXCOCOAD", "KXCORND", "KXSOYBEAND", "KXWHEATD", "KXLCATTLED"],
+    "#72 metals and oil hourly": ["KXGOLDH", "KXSILVERH", "KXPLATINUMH", "KXPALLADIUMH", "KXWTIH"],
 }
 WINDOWS = {"#21 crypto 15m": ["1-5m", "5-15m"], "#22 equity index": ["1-5m", "5-15m", "15-50m"],
            "#23 commodity 15m": ["1-5m", "5-15m"], "#24 FX/rates 15m": ["1-5m", "5-15m"],
-           "#40 BTC hourly ranges": ["5-15m", "15-50m"]}
+           "#40 BTC hourly ranges": ["5-15m", "15-50m"],
+           "#70 coffee": ["1-5m", "5-15m", "15-50m"],
+           "#71 ags and softs daily": ["5-15m", "15-50m"],
+           "#72 metals and oil hourly": ["5-15m", "15-50m"]}
 POOL = {"<30s": "<1m", "30-60s": "<1m", "1-2m": "1-5m", "2-3m": "1-5m", "3-5m": "1-5m",
         "5-10m": "5-15m", "10-15m": "5-15m", "15-30m": "15-50m", "30-50m": "15-50m",
         "50m-3h": "50m-3h"}

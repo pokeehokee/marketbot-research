@@ -54,12 +54,17 @@ TTC_NAMES = ["<30s", "30-60s", "1-2m", "2-3m", "3-5m", "5-10m", "10-15m",
              "15-30m", "30-50m", "50m-3h"]
 # The fixed close grid each series family settles on, in seconds.
 GRID = {"15M": 900, "U": 3600, "D": 3600}
+# Commodity hourly series (listed by the softs-ags-1 series probe, 2026-11-26). Named
+# explicitly: "ends in H" would also catch unrelated series.
+HOURLY_CMDTY = {"KXCOFFEEH", "KXGOLDH", "KXSILVERH", "KXPLATINUMH", "KXPALLADIUMH", "KXWTIH"}
 
 
 def grid_of(series):
     if series.endswith("15M"):
         return GRID["15M"]
     if series.endswith("U") or series in ("KXBTCD", "KXBTC"):   # KXBTC: hourly ranges (#40)
+        return GRID["U"]
+    if series in HOURLY_CMDTY:   # #70-#72: commodity hourly ladders settle on the hour
         return GRID["U"]
     return None   # daily or other: not checked
 

@@ -1,0 +1,104 @@
+name: Ladder trade on coffee, ags and commodity hourly series, ideas 70-72 (public research repo)
+
+# Ideas #70-#72: the BTC ladder's trade (a maker holding the 90-99c side) on
+# Kalshi's coffee (15-minute, hourly, daily), ag and softs daily, and metals/oil hourly
+# series, from the full public trade tape. KXBTCD is read again as the control.
+# Read-only and unauthenticated: no secret is referenced
+# anywhere in this file. Four shards run in parallel, each resumable from its
+# cached database; the scorer reads both. Triggered by editing
+# research/discovery/LADDERSOFTS on main.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/discovery/LADDERSOFTS"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ladder-softs
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: coffee
+            series: KXCOFFEE15M,KXCOFFEEH,KXCOFFEED
+          - shard: ags
+            series: KXCOCOAD,KXCORND,KXSOYBEAND,KXWHEATD,KXLCATTLED
+          - shard: metals-h
+            series: KXGOLDH,KXSILVERH,KXPLATINUMH,KXPALLADIUMH,KXWTIH
+          - shard: ctl-btcd
+            series: KXBTCD
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read parameters
+        id: p
+        run: grep -E '^(days|budget|tag)=' research/discovery/LADDERSOFTS >> "$GITHUB_OUTPUT"
+      - name: Restore this shard's database (resume)
+        uses: actions/cache/restore@v4
+        with:
+          path: research/discovery/ladder_${{ steps.p.outputs.tag }}-${{ matrix.shard }}.db
+          key: ladder-${{ steps.p.outputs.tag }}-${{ matrix.shard }}-${{ github.run_id }}
+          restore-keys: ladder-${{ steps.p.outputs.tag }}-${{ matrix.shard }}-
+      - name: Tests
+        run: python3 -m unittest discover -s research/discovery -p 'test_*.py'
+      - name: Read the tape
+        run: |
+          set -o pipefail
+          timeout $(( ${{ steps.p.outputs.budget }} * 60 + 900 )) \
+            python3 -I research/discovery/ladder_tape.py --series "${{ matrix.series }}" \
+              --days ${{ steps.p.outputs.days }} --budget-min ${{ steps.p.outputs.budget }} \
+              --tag "${{ steps.p.outputs.tag }}-${{ matrix.shard }}" \
+            | tee research/discovery/out/ladder-${{ steps.p.outputs.tag }}-${{ matrix.shard }}.log
+      - name: Export
+        if: always()
+        run: |
+          python3 -I research/discovery/ladder_tape.py --tag "${{ steps.p.outputs.tag }}-${{ matrix.shard }}" \
+            --export research/discovery/out/ladder-${{ steps.p.outputs.tag }}-${{ matrix.shard }}.csv.gz
+      - name: Save this shard's database
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: research/discovery/ladder_${{ steps.p.outputs.tag }}-${{ matrix.shard }}.db
+          key: ladder-${{ steps.p.outputs.tag }}-${{ matrix.shard }}-${{ github.run_id }}
+      - name: Commit this shard's aggregates
+        if: always()
+        run: |
+          git config user.name "ladder-tape"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/discovery/out
+          git commit -m "ladder tape output: ${{ steps.p.outputs.tag }} ${{ matrix.shard }}" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep $((i * 7)); done
+
+  score:
+    needs: pull
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Read parameters
+        id: p
+        run: grep -E '^(tag)=' research/discovery/LADDERSOFTS >> "$GITHUB_OUTPUT"
+      - name: Score
+        run: |
+          git pull origin "${GITHUB_REF_NAME}"
+          python3 -I research/discovery/score_ladder.py research/discovery/out/ladder-${{ steps.p.outputs.tag }}-*.csv.gz \
+            | tee research/discovery/out/ladder-${{ steps.p.outputs.tag }}-score.txt
+          cat research/discovery/out/ladder-${{ steps.p.outputs.tag }}-score.txt >> "$GITHUB_STEP_SUMMARY"
+      - name: Commit the score
+        run: |
+          git config user.name "ladder-tape"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/discovery/out
+          git commit -m "ladder tape score: ${{ steps.p.outputs.tag }}" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep $((i * 7)); done

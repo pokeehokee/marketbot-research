@@ -1,0 +1,6 @@
+# Editing this file on main dispatches ideas #70-#72 (coffee, ags and softs, commodity
+# hourly ladders; KXBTCD as control): .github/workflows/ladder-softs.yml.
+# Fields: days budget tag
+days=28
+budget=300
+tag=softs-1

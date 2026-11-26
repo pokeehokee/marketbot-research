@@ -119,6 +119,9 @@ class HourlyRangeGrid(unittest.TestCase):
         self.assertEqual(L.grid_of("KXBTCD"), 3600)
         self.assertEqual(L.grid_of("KXBTC15M"), 900)
         self.assertIsNone(L.grid_of("KXBTCMAXY"))
+        self.assertEqual(L.grid_of("KXCOFFEEH"), 3600)
+        self.assertEqual(L.grid_of("KXCOFFEE15M"), 900)
+        self.assertIsNone(L.grid_of("KXCOFFEED"))   # daily: close time not on a fixed grid
         self.assertIn("KXBTC", SL.IDEAS["#40 BTC hourly ranges"])
         self.assertEqual(SL.WINDOWS["#40 BTC hourly ranges"], ["5-15m", "15-50m"])
 

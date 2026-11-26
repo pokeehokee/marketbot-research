@@ -453,8 +453,11 @@ def pmus_targets(markets, now_ts, hours=PMUS_BOOK_HOURS, cap=PMUS_BOOK_MAX):
 def fetch_pmus_books():
     if not LAST_PMUS:
         raise RuntimeError("no Polymarket US listing this run")
-    ends = sorted((m.get("endDate") or "") for m in LAST_PMUS if not m.get("closed"))
-    log(f"    {len(ends)} open; endDate earliest {ends[:2]} latest {ends[-1:]}; keys {sorted(LAST_PMUS[0])[:30]}")
+    gs = [m.get("gameStartTime") for m in LAST_PMUS if m.get("gameStartTime")]
+    ids = [m.get("id") for m in LAST_PMUS]
+    log(f"    {len(LAST_PMUS)} listed; gameStartTime on {len(gs)}, samples {sorted(gs)[-3:]}; "
+        f"createdAt last {sorted(str(m.get('createdAt')) for m in LAST_PMUS)[-1:]}; ids {ids[:2]}..{ids[-2:]}; "
+        f"categories {sorted({str(m.get('category')) for m in LAST_PMUS})[:12]}")
     got = []
     for i, slug in enumerate(pmus_targets(LAST_PMUS, time.time())):
         if i:

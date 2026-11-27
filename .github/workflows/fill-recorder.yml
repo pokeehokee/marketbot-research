@@ -1,0 +1,87 @@
+name: Fill-test order-book recorder
+
+# Records the order books needed to test whether a small resting order would fill, for the two
+# edges the 2026-11-24 discovery left alive: sports longshots and the four-city temperature cheap
+# side (research/fills/fill_recorder.py has the why). Read-only and unauthenticated: every request
+# goes through research/commodity/book_collector.get(), whose whitelist refuses anything but the
+# market listing and the orderbook reads. No secret is referenced in this file.
+#
+# Moved here from a private repository on 2026-11-27, where the 20-minute schedule fired about
+# 3 times a day instead of 72. Here minutes are free, and each run dispatches the next one itself,
+# paced to 20 minutes, as recorder.yml does; the schedule stays only as a restarter if the chain
+# breaks. Concurrency keeps at most one running and one pending.
+#
+# One snapshot per run, kept as an artifact for 30 days (past the 2026-12-09 scoring).
+# The chain ends itself after STOP_AFTER. To stop it sooner: commit research/fills/STOP to main.
+on:
+  schedule:
+    - cron: "7-59/20 * * * *"   # off the hour marks, which GitHub drops first under load
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write     # only to dispatch the next run
+
+concurrency:
+  group: fill-recorder
+  cancel-in-progress: false
+
+env:
+  STOP_AFTER: "2026-12-09"
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 23   # ~1 recording, the rest waiting for the next 20-minute slot
+    steps:
+      - name: Window
+        id: w
+        run: |
+          echo "start=$(date -u +%s)" >> "$GITHUB_OUTPUT"
+          if [ "$(date -u +%F)" \> "$STOP_AFTER" ]; then echo "past $STOP_AFTER"; echo "done=1" >> "$GITHUB_OUTPUT"; fi
+
+      - uses: actions/checkout@v4
+        if: steps.w.outputs.done != '1'
+
+      - name: Tests first (a broken recorder must not record)
+        if: steps.w.outputs.done != '1'
+        run: |
+          python3 -I -m unittest discover -s research/fills -p 'test_*.py'
+          python3 -I -m unittest discover -s research/commodity -p 'test_*.py'
+
+      - name: One snapshot
+        if: steps.w.outputs.done != '1'
+        run: timeout 600 python3 -I research/fills/fill_recorder.py --db fill_books.db
+
+      - name: Source checks on what was just recorded
+        if: steps.w.outputs.done != '1'
+        run: |
+          set -o pipefail
+          python3 -I research/fills/fill_recorder.py --db fill_books.db --check | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Export
+        if: always() && steps.w.outputs.done != '1'
+        run: python3 -I research/fills/fill_recorder.py --db fill_books.db --export exported
+
+      - name: Upload
+        if: always() && steps.w.outputs.done != '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: fill-books-${{ github.run_id }}
+          path: exported/
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Dispatch the next run
+        if: always() && steps.w.outputs.done != '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -e research/fills/STOP ]; then echo "STOP present: chain ends here"; exit 0; fi
+          wait=$(( 1200 - ($(date -u +%s) - ${{ steps.w.outputs.start }}) ))
+          if [ "$wait" -gt 0 ]; then sleep "$wait"; fi
+          for i in 1 2 3 4; do
+            gh api -X POST "repos/${{ github.repository }}/actions/workflows/fill-recorder.yml/dispatches" -f ref=main && exit 0
+            sleep 15
+          done
+          echo "could not dispatch the next run"; exit 1

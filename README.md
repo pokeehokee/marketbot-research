@@ -11,6 +11,9 @@ no account data, no orders. Each script refuses any host or path not on its own 
 - `research/recorders/`: snapshots every 10 minutes of venues that keep no public price
   history (Gemini Predictions, Polymarket, PredictIt). Each UTC day is merged into one gzipped
   CSV per venue and attached to the release `data-YYYYMM`, so the data never enters git history.
+- `research/fills/`: Kalshi order books every 20 minutes for the sports-longshot and temperature
+  fill test (scored after 2026-12-09). Each run's export is an artifact `fill-books-<run id>`,
+  kept 30 days. It stops itself after the window.
 
 GitHub pauses scheduled workflows in a public repository after 60 days without a commit.
 

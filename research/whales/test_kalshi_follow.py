@@ -34,6 +34,13 @@ class TestKalshiFollow(unittest.TestCase):
         self.assertAlmostEqual(k.maker_fee(.5), .005)
         self.assertEqual(k.maker_fee(.5, rate=0), 0)
 
+    def test_forward_halves_split_by_day(self):
+        rows = [{"day": d, "pnl": p} for d, p in (("a", 1), ("a", -1), ("b", 2), ("c", -1), ("d", 3))]
+        self.assertEqual(k.halves_of(rows), [2.0 / 3, 1.0])
+
+    def test_forward_window_is_frozen_after_the_results_it_follows(self):
+        self.assertGreater(k.FORWARD_FROM, "2026-11-27")
+
     def test_read_only(self):
         with self.assertRaises(RuntimeError):
             k.T.assert_read_only("/portfolio/orders")

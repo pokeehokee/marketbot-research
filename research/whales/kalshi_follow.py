@@ -179,7 +179,7 @@ import random
 B = 2000
 
 
-def boot(by):
+def boot(by, alpha=0.05):
     g = [v for v in by.values() if v[1]]
     if len(g) < 3:
         return None
@@ -192,7 +192,7 @@ def boot(by):
             x = g[rnd.randrange(len(g))]; s += x[0]; n += x[1]
         ms.append(s / n)
     ms.sort()
-    return tot, ms[int(.025 * B)], ms[int(.975 * B) - 1], sum(1 for m in ms if m <= 0) / B
+    return tot, ms[int(alpha / 2 * B)], ms[int((1 - alpha / 2) * B) - 1], sum(1 for m in ms if m <= 0) / B
 
 
 def cell(rows):
@@ -321,6 +321,56 @@ def score(a):
             w(f"  {f:18s} late {dl:3d}s  {fmt(cell([r for r in rows if r['day'] >= HOLDOUT_FROM and FAM[f](r) and r['delay'] == dl]))}")
 
 
+# --- forward test -------------------------------------------------------------------
+FORWARD_FROM = "2026-11-28"   # first UTC day no one has seen; frozen 2026-11-27
+FORWARD_MIN_DAYS = 20
+FORWARD_MIN_N = 300
+FORWARD_ALPHA = 0.025         # Bonferroni over the two pre-registered cells
+
+
+def halves_of(rows):
+    days = sorted({r["day"] for r in rows})
+    mid = len(days) // 2
+    out = []
+    for part in (set(days[:mid]), set(days[mid:])):
+        R = [r for r in rows if r["day"] in part]
+        out.append(sum(r["pnl"] for r in R) / len(R) if R else None)
+    return out
+
+
+def forward(a):
+    """The pre-registered forward test of variants 1 and 2. Only entries from FORWARD_FROM on
+    count. Verdict when both minimums are met: a cell passes if its day-clustered interval at
+    1 - FORWARD_ALPHA excludes zero AND both halves of its days are positive."""
+    c = db(os.path.join(HERE, f"kf_{a.tag}.db"))
+    ev = [e for e in load_events(sorted(glob.glob(a.forward))) if e["day"] >= FORWARD_FROM]
+    w = print
+    w(f"FORWARD TEST from {FORWARD_FROM}: {len(ev)} whale events; verdict at >= {FORWARD_MIN_DAYS} days "
+      f"and >= {FORWARD_MIN_N} entries per cell, interval {1 - FORWARD_ALPHA:.1%}, both halves positive")
+    miss = []
+    cells = (("taker (variant 1)", build(c, ev)),
+             ("maker, fee 0.0175 (variant 2)", build(c, ev, maker=MAKER_FEE, miss=miss)))
+    for name, rows in cells:
+        R = [r for r in rows if FAM["entries"](r) and r["delay"] == 0]
+        by = defaultdict(lambda: [0.0, 0])
+        for r in R:
+            g = by[r["day"]]; g[0] += r["pnl"]; g[1] += 1
+        b = boot(by, FORWARD_ALPHA)
+        cc = cell(R)
+        h = halves_of(R)
+        ready = len(by) >= FORWARD_MIN_DAYS and len(R) >= FORWARD_MIN_N
+        ok = ready and b and b[1] > 0 and None not in h and min(h) > 0
+        hs = f"  halves {h[0]*100:+.2f}c / {h[1]*100:+.2f}c" if None not in h else ""
+        iv = f"  {1 - FORWARD_ALPHA:.1%} interval [{b[1]*100:+.2f}, {b[2]*100:+.2f}]" if b else ""
+        w(f"  {name:30s} {fmt(cc)}{iv}{hs}")
+        w(f"  {'':30s} verdict: {'PASS' if ok else ('dead' if ready else 'not yet (' + str(len(by)) + ' days, ' + str(len(R)) + ' entries)')}")
+    fills = len([r for r in cells[1][1] if FAM["entries"](r) and r["delay"] == 0])
+    missed = len([r for r in miss if FAM["entries"](r) and r["delay"] == 0])
+    w(f"  maker fill rate {fills} of {fills + missed}")
+    w(f"  daily (taker): " + " ".join(f"{d[5:]} {sum(r['pnl'] for r in cells[0][1] if r['day'] == d and FAM['entries'](r) and r['delay'] == 0)*100:+.0f}c"
+                                     for d in sorted({r['day'] for r in cells[0][1]})))
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--tag", required=True)
@@ -328,8 +378,9 @@ def main(argv=None):
     ap.add_argument("--score")
     ap.add_argument("--budget-min", type=int, default=300)
     ap.add_argument("--maker", type=float, help="score variant 2 at this maker fee rate")
+    ap.add_argument("--forward", help="events glob: run the pre-registered forward test")
     a = ap.parse_args(argv)
-    score(a) if a.score else run(a)
+    forward(a) if a.forward else (score(a) if a.score else run(a))
 
 
 if __name__ == "__main__":

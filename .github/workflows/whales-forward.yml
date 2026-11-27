@@ -1,0 +1,113 @@
+name: Whale copy on Kalshi 15-minute binaries, forward practice test (public research repo)
+
+# Devin's yes of 2026-11-27: track variants 1 and 2 forward on data nobody has seen.
+# Each day: read the newest fills of a wallet universe frozen on the first run (Hyperliquid's
+# public info endpoint), turn them into whale events, price the copy on Kalshi's public
+# KXBTC15M / KXETH15M / KXSOL15M trades, and score only days from 2026-11-28 on
+# (research/whales/kalshi_follow.py, FORWARD_*). Read-only and unauthenticated: no secret is
+# referenced and nothing here can place an order. A missed day is NOT lost: fills and trades
+# are historical, so the next run reads the gap.
+on:
+  schedule:
+    - cron: "17 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: whales-forward
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore this shard's database
+        uses: actions/cache/restore@v4
+        with:
+          path: research/whales/whales_fwd_${{ matrix.shard }}.db
+          key: whales-fwd-${{ matrix.shard }}-${{ github.run_id }}
+          restore-keys: whales-fwd-${{ matrix.shard }}-
+      - name: Tests
+        run: python3 -m unittest discover -s research/whales -p 'test_*.py'
+      - name: Read new fills
+        run: |
+          set -o pipefail
+          mkdir -p research/whales/out
+          timeout 6000 python3 -I research/whales/whale_flow.py --tag fwd --shard ${{ matrix.shard }}/3 \
+            --days 2 --forward --budget-min 90 | tee research/whales/out/fwd-${{ matrix.shard }}.log
+      - name: Export events
+        if: always()
+        run: |
+          python3 -I research/whales/whale_flow.py --tag fwd --shard ${{ matrix.shard }}/3 \
+            --export research/whales/out/fwd-${{ matrix.shard }}.csv.gz
+      - name: Save this shard's database
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: research/whales/whales_fwd_${{ matrix.shard }}.db
+          key: whales-fwd-${{ matrix.shard }}-${{ github.run_id }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fwd-${{ matrix.shard }}
+          path: |
+            research/whales/out/fwd-${{ matrix.shard }}.csv.gz
+            research/whales/out/fwd-${{ matrix.shard }}-coverage.txt
+          retention-days: 3
+
+  follow:
+    needs: pull
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dl
+      - name: Gather events
+        run: |
+          mkdir -p research/whales/out
+          find dl -name 'fwd-*' -exec cp {} research/whales/out/ \;
+          cat research/whales/out/fwd-*-coverage.txt
+      - name: Restore Kalshi database
+        uses: actions/cache/restore@v4
+        with:
+          path: research/whales/kf_fwd.db
+          key: kf-fwd-${{ github.run_id }}
+          restore-keys: kf-fwd-
+      - name: Read Kalshi windows
+        run: |
+          set -o pipefail
+          timeout 7200 python3 -I research/whales/kalshi_follow.py --tag fwd \
+            --events 'research/whales/out/fwd-[0-9].csv.gz' --budget-min 110 \
+            | tee research/whales/out/kf-fwd.log
+      - name: Save Kalshi database
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: research/whales/kf_fwd.db
+          key: kf-fwd-${{ github.run_id }}
+      - name: Score the forward test
+        if: always()
+        run: |
+          python3 -I research/whales/kalshi_follow.py --tag fwd \
+            --forward 'research/whales/out/fwd-[0-9].csv.gz' \
+            > research/whales/out/kf-forward.txt 2>&1 || true
+          cat research/whales/out/kf-forward.txt | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Commit the score
+        if: always()
+        run: |
+          git config user.name "whales"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/whales/out/kf-forward.txt research/whales/out/fwd-*-coverage.txt research/whales/out/kf-fwd-coverage.txt || true
+          git commit -m "whales: forward test $(date -u +%F)" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep $((i * 7)); done

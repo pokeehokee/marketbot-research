@@ -63,3 +63,19 @@ Variants:
    GeckoTerminal's per-pool trades carry the trader's address, so this is feasible later.
 7. The reverse: does the prompt's exact trigger predict a LOSS strongly enough to fade? On
    Solana there is no short; recorded only as a diagnostic, not a strategy.
+
+## Forward test of variants 1 and 2, pre-registered 2026-11-27 (Devin's yes)
+
+Both died on the historical holdout (train negative, holdout positive in every family, entries
+about 4x denser after Nov 3), so they are tracked forward, paper only, on data nobody has seen.
+
+- Universe: Hyperliquid leaderboard's 600 largest accounts >= $250k (whales-1's rule), frozen
+  in the database on the first run, 2026-11-27. Events >= $50k notional, as whales-1.
+- Counted: entries (open/add/flip), delay 0 (+5 s latency), all three coins, hold to settlement,
+  from 2026-11-28 UTC on. Two cells only: taker at the ask (Kalshi taker fee), and maker
+  (bid = taker price - 1c, filled only on a trade-through within 120 s, maker fee 0.0175).
+- Verdict once a cell has >= 20 days AND >= 300 entries: PASS only if its day-clustered
+  bootstrap interval at 97.5% (Bonferroni over the two cells) excludes zero AND both halves of
+  its days are positive. Anything else is dead. No cell, filter or coin split is added later.
+- A PASS is a reason to build a paper book in the app, not to trade.
+- Workflow: .github/workflows/whales-forward.yml, daily 07:17Z; score in out/kf-forward.txt.

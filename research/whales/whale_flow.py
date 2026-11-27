@@ -331,6 +331,13 @@ def run(a):
     assert_read_only()
     shard, nshards = map(int, a.shard.split("/"))
     c = db(os.path.join(HERE, f"whales_{a.tag}_{shard}.db"))
+    if getattr(a, "forward", False):
+        # Forward mode: the universe is frozen in the database the first time it runs (so it
+        # is chosen BEFORE any of the data it is scored on), and every run moves t_end up to
+        # an hour ago and reads each wallet only from its newest stored fill.
+        c.execute("INSERT OR REPLACE INTO meta VALUES ('t_end', ?)", (str(int(time.time() // 60 * 60) - 3600),))
+        c.execute("UPDATE wallet SET done=0")
+        c.commit()
     if meta_get(c, "t_end") is None:
         c.execute("INSERT INTO meta VALUES ('t_end', ?)", (str(int(time.time() // 60 * 60) - 3600),))
         c.commit()
@@ -346,7 +353,11 @@ def run(a):
             log("budget reached; a re-run resumes here")
             break
         try:
-            n, pages = pull_wallet(c, addr, t0 * 1000, t_end * 1000)
+            start = t0 * 1000
+            if getattr(a, "forward", False):
+                last = c.execute("SELECT MAX(time) FROM fill WHERE addr=?", (addr,)).fetchone()[0]
+                start = max(start, last or 0)
+            n, pages = pull_wallet(c, addr, start, t_end * 1000)
         except Exception as ex:
             log(f"  {addr[:10]} failed: {type(ex).__name__} {str(ex)[:120]}")
             continue
@@ -424,6 +435,7 @@ def main(argv=None):
     ap.add_argument("--min-account", type=float, default=MIN_ACCOUNT)
     ap.add_argument("--max-account", type=float, default=None)
     ap.add_argument("--min-notional", type=float, default=MIN_NOTIONAL)
+    ap.add_argument("--forward", action="store_true", help="incremental daily pull on a frozen universe")
     a = ap.parse_args(argv)
     if a.export:
         export(a, a.export)

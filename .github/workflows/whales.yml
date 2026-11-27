@@ -1,0 +1,101 @@
+name: Whale-flow copy test (public research repo)
+
+# Do big Hyperliquid wallets' BTC/ETH/SOL trades lead the price after a copier's delay and
+# fees? research/whales/whale_flow.py has the method. Read-only and unauthenticated: public
+# wallet fills from Hyperliquid's info endpoint and Coinbase spot candles. No secret is
+# referenced in this file and nothing here can place an order.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/whales/WHALES"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: whales
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read parameters
+        id: p
+        run: grep -E '^(days|budget|tag)=' research/whales/WHALES >> "$GITHUB_OUTPUT"
+      - name: Restore this shard's database (resume)
+        uses: actions/cache/restore@v4
+        with:
+          path: research/whales/whales_${{ steps.p.outputs.tag }}_${{ matrix.shard }}.db
+          key: whales-${{ steps.p.outputs.tag }}-${{ matrix.shard }}-${{ github.run_id }}
+          restore-keys: whales-${{ steps.p.outputs.tag }}-${{ matrix.shard }}-
+      - name: Tests
+        run: python3 -m unittest discover -s research/whales -p 'test_*.py'
+      - name: Read wallets, candles and funding
+        run: |
+          set -o pipefail
+          mkdir -p research/whales/out
+          timeout $(( ${{ steps.p.outputs.budget }} * 60 + 900 )) \
+            python3 -I research/whales/whale_flow.py --tag "${{ steps.p.outputs.tag }}" \
+              --shard ${{ matrix.shard }}/3 --days ${{ steps.p.outputs.days }} \
+              --budget-min ${{ steps.p.outputs.budget }} \
+            | tee research/whales/out/${{ steps.p.outputs.tag }}-${{ matrix.shard }}.log
+      - name: Export
+        if: always()
+        run: |
+          python3 -I research/whales/whale_flow.py --tag "${{ steps.p.outputs.tag }}" \
+            --shard ${{ matrix.shard }}/3 \
+            --export research/whales/out/${{ steps.p.outputs.tag }}-${{ matrix.shard }}.csv.gz
+      - name: Save this shard's database
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: research/whales/whales_${{ steps.p.outputs.tag }}_${{ matrix.shard }}.db
+          key: whales-${{ steps.p.outputs.tag }}-${{ matrix.shard }}-${{ github.run_id }}
+      - name: Commit this shard's events
+        if: always()
+        run: |
+          git config user.name "whales"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/whales/out
+          git commit -m "whales: ${{ steps.p.outputs.tag }} shard ${{ matrix.shard }}" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep $((i * 7)); done
+
+  score:
+    needs: pull
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Read parameters
+        id: p
+        run: grep -E '^(tag)=' research/whales/WHALES >> "$GITHUB_OUTPUT"
+      - name: Score once every shard is read
+        run: |
+          git config user.name "whales"
+          git config user.email "actions@users.noreply.github.com"
+          git pull origin "${GITHUB_REF_NAME}"
+          t=${{ steps.p.outputs.tag }}
+          unread=$(cat research/whales/out/$t-*-coverage.txt | awk '$1 == "wallets" {s += $6} END {print s+0}')
+          total=$(cat research/whales/out/$t-*-coverage.txt | awk '$1 == "wallets" {s += $2} END {print s+0}')
+          shards=$(ls research/whales/out/$t-*-coverage.txt | wc -l)
+          echo "unread $unread of $total across $shards shards"
+          if [ "$unread" != "0" ] || [ "$total" = "0" ] || [ "$shards" -lt 3 ]; then
+            echo "Not complete ($unread unread of $total, $shards shards); re-dispatch to resume." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python3 -I research/whales/score_whales.py $(ls research/whales/out/$t-[0-9].csv.gz) > research/whales/out/$t-score.txt
+          head -80 research/whales/out/$t-score.txt >> "$GITHUB_STEP_SUMMARY"
+          git add research/whales/out
+          git commit -m "whales score: $t" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep $((i * 7)); done

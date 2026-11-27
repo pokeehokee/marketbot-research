@@ -42,7 +42,7 @@ def load(paths):
         with gzip.open(p, "rt") as f:
             for r in csv.DictReader(f):
                 r["dir"] = int(r["dir"]); r["y"] = int(r["y"])
-                for k in ("p_ref", "p0", "p_1h", "p_6h", "p_24h", "entry_15m", "entry_60m", "ttc_h",
+                for k in ("p_ref", "p0", "p_1h", "p_6h", "p_24h", "entry_15m", "entry_60m", "entry_next", "ttc_h",
                           "contracts_jump_bar"):
                     r[k] = fnum(r.get(k))
                 rows.append(r)
@@ -146,7 +146,7 @@ def main(paths, out=sys.stdout):
           "  (+ keeps going, - snaps back)" if b else f"{h} n 0")
     w()
     found = []
-    for entry in ("p0", "entry_15m", "entry_60m"):
+    for entry in ("p0", "entry_next", "entry_15m", "entry_60m"):
         for play in ("follow", "fade"):
             for fee_name, which in (("taker", 0), ("maker", 1)):
                 w(f"== {play} at {entry}, {fee_name} ==")

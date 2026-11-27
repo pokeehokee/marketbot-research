@@ -56,6 +56,15 @@ class TestOutcomes(unittest.TestCase):
         # 15 minutes after the jump bar's end there is no newer bar: None, not the jump price
         self.assertIsNone(entry[900])
 
+    def test_next_bar_entry_is_the_bar_after_the_jump_bar(self):
+        """entry[0] is the bar that starts when the jump bar ends; the jump bar is never it."""
+        bb = bars([(0, 0.30), (1800, 0.50), (2100, 0.44), (2400, 0.41)])
+        later, entry = J.outcomes(bb, 1, close_ts=48 * H)
+        self.assertAlmostEqual(entry[0], 0.44)
+        gap = bars([(0, 0.30), (1800, 0.50), (3000, 0.44)])
+        later, entry = J.outcomes(gap, 1, close_ts=48 * H)
+        self.assertIsNone(entry[0])   # nothing traded in the next 5 minutes: None, not p0
+
     def test_lookahead_planted_fails(self):
         """The jump bar itself must never be read as a later price."""
         bb = bars([(0, 0.30), (1800, 0.50)])

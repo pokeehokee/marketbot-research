@@ -46,7 +46,7 @@ NO_JUMP_BEFORE_CLOSE = 3600
 LOOKBACK = 21 * 86400
 MIN_LIFE = 86400
 HORIZONS = (3600, 6 * 3600, 24 * 3600)
-DELAYS = (900, 3600)     # entry 15 and 60 minutes after the jump
+DELAYS = (0, 900, 3600)  # entry: the very next bar (0-5 min after the jump bar ends), 15 and 60 min
 
 
 # --- pure: bars, jumps, outcomes -------------------------------------------
@@ -248,7 +248,8 @@ def run(categories, days, budget_min, dbpath, log=print):
 
 
 COLS = ("category", "series", "event", "ticker", "jump_ts", "day", "dir", "p_ref", "p0",
-        "contracts_jump_bar", "ttc_h", "y", "p_1h", "p_6h", "p_24h", "entry_15m", "entry_60m")
+        "contracts_jump_bar", "ttc_h", "y", "p_1h", "p_6h", "p_24h", "entry_15m", "entry_60m",
+        "entry_next")
 
 
 def export(dbpath, path):
@@ -266,7 +267,8 @@ def export(dbpath, path):
                 jt = bars[i][0] + BAR
                 row = (cat.get(s) or "", s, ev, tk, int(jt), time.strftime("%Y-%m-%d", time.gmtime(jt)),
                        d, pref, p0, bars[i][2], (close_ts - jt) / 3600, 1 if res == "yes" else 0,
-                       later[3600], later[21600], later[86400], entry[900], entry[3600])
+                       later[3600], later[21600], later[86400], entry[900], entry[3600],
+                       entry[0])
                 f.write(",".join("" if v is None else (f"{v:.5g}" if isinstance(v, float) else str(v))
                                  for v in row) + "\n")
                 n += 1

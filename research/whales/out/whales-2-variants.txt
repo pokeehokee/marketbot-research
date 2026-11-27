@@ -1,0 +1,27 @@
+train 4971 events before 2026-09-01; holdout 2401 events 2026-09-01..2026-09-27
+wallets with >= 20 closed train positions: 34; consistent: 4; bottom decile: 3
+
+######## copier cost 4 bps round trip ########
+  3 consistent, train          n   251 d  50 lost   133  net   -6.3bp [ -13.2,   +0.6]  win  47.0%  x 0.84  per $1 -0.00063
+  3 consistent, HOLDOUT        n   123 d  23 lost    49  net  +11.9bp [  -2.0,  +24.5]  win  60.2%  x 1.13  per $1 +0.00119  halves +21.6 / -0.5bp
+  4 fade worst, train          n   427 d  46 lost   248  net   -8.2bp [ -12.8,   -3.9]  win  41.9%  x 0.95  per $1 -0.00082
+  4 fade worst, HOLDOUT        n    11 d   6 lost     5  net   +4.3bp [ -14.0,  +16.5]  win  54.5%  x 1.26  per $1 +0.00043  halves +1.3 / +8.0bp
+  5 front-run 5s, train        n  2443 d  63 lost  1814  net   -5.3bp [  -6.5,   -4.2]  win  25.7%  x 0.96  per $1 -0.00053
+  5 front-run 5s, HOLDOUT      n  1113 d  27 lost   793  net   -5.2bp [  -6.5,   -4.0]  win  28.8%  x 0.90  per $1 -0.00052  halves -4.8 / -5.4bp
+  5 front-run 30s, train       n  1669 d  63 lost  1228  net   -5.6bp [  -7.3,   -4.3]  win  26.4%  x 0.94  per $1 -0.00056
+  5 front-run 30s, HOLDOUT     n   766 d  27 lost   533  net   -4.8bp [  -6.4,   -3.3]  win  30.4%  x 0.96  per $1 -0.00048  halves -4.4 / -5.1bp
+
+######## copier cost 10 bps round trip ########
+  3 consistent, train          n   251 d  50 lost   140  net  -12.3bp [ -19.2,   -5.4]  win  44.2%  x 0.71  per $1 -0.00123
+  3 consistent, HOLDOUT        n   123 d  23 lost    55  net   +5.9bp [  -8.0,  +18.5]  win  55.3%  x 1.05  per $1 +0.00059  halves +15.6 / -6.5bp
+  4 fade worst, train          n   427 d  46 lost   277  net  -14.2bp [ -18.8,   -9.9]  win  35.1%  x 0.96  per $1 -0.00142
+  4 fade worst, HOLDOUT        n    11 d   6 lost     5  net   -1.7bp [ -20.0,  +10.5]  win  54.5%  x 0.71  per $1 -0.00017  halves -4.7 / +2.0bp
+  5 front-run 5s, train        n  2443 d  63 lost  2178  net  -11.3bp [ -12.5,  -10.2]  win  10.8%  x 1.02  per $1 -0.00113
+  5 front-run 5s, HOLDOUT      n  1113 d  27 lost   963  net  -11.2bp [ -12.5,  -10.0]  win  13.5%  x 0.87  per $1 -0.00112  halves -10.8 / -11.4bp
+  5 front-run 30s, train       n  1669 d  63 lost  1482  net  -11.6bp [ -13.3,  -10.3]  win  11.2%  x 1.05  per $1 -0.00116
+  5 front-run 30s, HOLDOUT     n   766 d  27 lost   658  net  -10.8bp [ -12.4,   -9.3]  win  14.1%  x 1.01  per $1 -0.00108  halves -10.4 / -11.1bp
+
+Survival (4 bps, BH q=0.10 over 13 variants, unscored counted p=1):
+  3 consistent, HOLDOUT        p 0.043  dead
+  4 fade worst, HOLDOUT        p 0.306  dead
+  5 front-run 30s, HOLDOUT     p 1.000  dead

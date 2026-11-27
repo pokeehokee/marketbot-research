@@ -1,0 +1,26 @@
+leaderboard rows 47064; keys of the first: ['accountValue', 'displayName', 'ethAddress', 'prize', 'windowPerformances']
+universe 900 wallets with account >= $25,000; this shard 328; account median $223,895
+wallets to read 328
+20 wallets read
+40 wallets read
+60 wallets read
+80 wallets read
+100 wallets read
+120 wallets read
+140 wallets read
+160 wallets read
+180 wallets read
+200 wallets read
+220 wallets read
+240 wallets read
+260 wallets read
+280 wallets read
+300 wallets read
+320 wallets read
+candles BTC: 216200
+candles ETH: 216200
+candles SOL: 216192
+funding BTC: 3624
+funding ETH: 3624
+funding SOL: 3624
+done this run: 328 wallets read, 0 unread

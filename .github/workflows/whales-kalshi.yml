@@ -1,0 +1,64 @@
+name: Whale follow on Kalshi 15-minute binaries (public research repo)
+
+# Variant 1 of the whale mutations: buy the matching side of KXBTC15M / KXETH15M / KXSOL15M
+# after a big Hyperliquid wallet trades. research/whales/kalshi_follow.py has the method.
+# Read-only and unauthenticated: Kalshi public markets and trades. No secret is referenced
+# and nothing here can place an order.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        default: "1"
+      budget:
+        default: "320"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: whales-kalshi
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore database (resume)
+        uses: actions/cache/restore@v4
+        with:
+          path: research/whales/kf_${{ inputs.tag }}.db
+          key: kf-${{ inputs.tag }}-${{ github.run_id }}
+          restore-keys: kf-${{ inputs.tag }}-
+      - name: Tests
+        run: python3 -m unittest discover -s research/whales -p 'test_*.py'
+      - name: Read Kalshi windows
+        run: |
+          set -o pipefail
+          mkdir -p research/whales/out
+          timeout $(( ${{ inputs.budget }} * 60 + 600 )) \
+            python3 -I research/whales/kalshi_follow.py --tag "${{ inputs.tag }}" \
+              --events 'research/whales/out/whales-1-[0-9].csv.gz' \
+              --budget-min ${{ inputs.budget }} \
+            | tee research/whales/out/kf-${{ inputs.tag }}.log
+      - name: Save database
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: research/whales/kf_${{ inputs.tag }}.db
+          key: kf-${{ inputs.tag }}-${{ github.run_id }}
+      - name: Score
+        if: always()
+        run: |
+          python3 -I research/whales/kalshi_follow.py --tag "${{ inputs.tag }}" \
+            --score 'research/whales/out/whales-1-[0-9].csv.gz' \
+            > research/whales/out/kf-${{ inputs.tag }}-score.txt 2>&1 || true
+      - name: Commit
+        if: always()
+        run: |
+          git config user.name "whales"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/whales/out
+          git commit -m "whales: kalshi follow ${{ inputs.tag }}" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep $((i * 7)); done

@@ -29,10 +29,10 @@ from collections import defaultdict
 from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ALLOWED = {"gamma-api.polymarket.com": ("/markets",), "data-api.polymarket.com": ("/trades",)}
+ALLOWED = {"gamma-api.polymarket.com": ("/markets",), "data-api.polymarket.com": ("/v2/trades",)}
 START, END = "2026-07-01", "2026-11-20"
 MIN_VOL = 50_000
-PAGE = 500
+PAGE = 1000          # v2 /trades max; v1 (offset paging) was retired 2026-10-24
 MAX_PAGES = 8
 MIN_MKTS, MIN_EDGE = 15, 0.05
 DELAYS = (60, 300)
@@ -122,7 +122,7 @@ def list_markets(c, shard, nshards, log):
     while True:
         page = get("https://gamma-api.polymarket.com/markets", {
             "closed": "true", "end_date_min": START + "T00:00:00Z", "end_date_max": END + "T23:59:59Z",
-            "volume_num_min": MIN_VOL, "limit": 500, "offset": off, "order": "endDate", "ascending": "true"})
+            "volume_num_min": MIN_VOL, "limit": 100, "offset": off, "order": "endDate", "ascending": "true"})
         if not page:
             break
         if off == 0:
@@ -141,7 +141,7 @@ def list_markets(c, shard, nshards, log):
                       (cid, (m.get("question") or "")[:200], end, w, float(m.get("volumeNum") or 0), cat))
             kept += 1
         off += len(page)
-        if len(page) < 500:
+        if len(page) < 100:
             break
     c.execute("INSERT OR REPLACE INTO meta VALUES ('listed', ?)", (str(n),))
     c.commit()
@@ -156,32 +156,50 @@ def hash_(s):
 
 
 def pull(c, cid, log, first=False):
-    n, capped = 0, 0
+    n, capped, cursor = 0, 0, None
     for pg in range(MAX_PAGES):
-        page = get("https://data-api.polymarket.com/trades", {"market": cid, "limit": PAGE,
-                                                              "offset": pg * PAGE, "takerOnly": "true"})
-        if page is None:
-            capped = 1 if pg else 0
+        params = {"condition": cid, "taker_only": "true"}
+        params.update({"cursor": cursor} if cursor else {"limit": PAGE})
+        r = get("https://data-api.polymarket.com/v2/trades", params)
+        if r is None:
             break
-        if first and pg == 0 and page:
-            log(f"field check, first trade: {json.dumps(page[0])[:600]}")
+        page, cursor = page_of(r)
+        if first and pg == 0:
+            log(f"field check, response keys: {sorted(r.keys()) if isinstance(r, dict) else 'list'}; "
+                f"first trade: {json.dumps(page[0])[:600] if page else None}")
         rows = []
         for x in page:
+            oi = x.get("outcome_index", x.get("outcomeIndex"))
             try:
-                rows.append((cid, (x.get("proxyWallet") or "").lower(), x.get("side"), int(x.get("outcomeIndex")),
+                oi = int(oi)
+                if oi not in (0, 1):
+                    continue
+                rows.append((cid, (x.get("proxy_wallet") or x.get("proxyWallet") or "").lower(), x.get("side"), oi,
                              float(x.get("price")), float(x.get("size")), int(x.get("timestamp")),
-                             x.get("transactionHash") or ""))
+                             x.get("transaction_hash") or x.get("transactionHash") or ""))
             except (TypeError, ValueError):
                 continue
         c.executemany("INSERT OR IGNORE INTO tr VALUES (?,?,?,?,?,?,?,?)", rows)
         n += len(rows)
-        if len(page) < PAGE:
+        if not cursor:
             break
     else:
         capped = 1
     c.execute("UPDATE mkt SET done=1, trades=?, capped=? WHERE cid=?", (n, capped, cid))
     c.commit()
     return n
+
+
+def page_of(r):
+    """v2 /trades: rows plus pagination.next_cursor (None on the last page). The row list's key
+    is read defensively, and a bare list is accepted, so a shape change shows up as empty pages
+    in the field check rather than as a crash."""
+    if isinstance(r, list):
+        return r, None
+    rows = r.get("data") or r.get("trades") or r.get("results") or []
+    pg = r.get("pagination") or {}
+    nxt = pg.get("next_cursor") if pg.get("has_more", True) else None
+    return rows, nxt
 
 
 def run(a, log=print):

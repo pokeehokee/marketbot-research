@@ -25,11 +25,17 @@ class TestPmSharp(unittest.TestCase):
         out = p.follow(rows, {"x"}, {"M": 1}, {"M": 0}, delay=60)
         self.assertEqual(out[0], [(1 - .42, .42, 1.0)])
 
+    def test_v2_page(self):
+        rows, nxt = p.page_of({"data": [{"a": 1}], "pagination": {"next_cursor": "abc", "has_more": True}})
+        self.assertEqual((rows, nxt), ([{"a": 1}], "abc"))
+        self.assertEqual(p.page_of({"data": [], "pagination": {"next_cursor": None, "has_more": False}}), ([], None))
+        self.assertEqual(p.page_of([{"a": 1}]), ([{"a": 1}], None))
+
     def test_read_only(self):
         with self.assertRaises(RuntimeError):
             p.get("https://clob.polymarket.com/order")
         with self.assertRaises(RuntimeError):
-            p.get("https://data-api.polymarket.com.evil.example/trades")
+            p.get("https://data-api.polymarket.com.evil.example/v2/trades")
 
 
 if __name__ == "__main__":

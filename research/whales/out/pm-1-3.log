@@ -1,0 +1,61 @@
+12:29:49 field check, first market keys: ['acceptingOrders', 'acceptingOrdersTimestamp', 'active', 'approved', 'archived', 'automaticallyActive', 'automaticallyResolved', 'bestAsk', 'clearBookOnStart', 'clobTokenIds', 'closed', 'closedTime', 'comboStatus', 'conditionId', 'createdAt', 'customLiveness', 'cyom', 'deploying', 'deployingTimestamp', 'description', 'enableOrderBook', 'endDate', 'endDateIso', 'events', 'fallbackResolutionType', 'featured', 'feeSchedule', 'feeType', 'feesEnabled', 'funded', 'gameStartTime', 'groupItemThreshold', 'groupItemTitle', 'hasReviewedDates', 'holdingRewardsEnabled', 'icon', 'id', 'image', 'lastTradePrice', 'makerBaseFee', 'manualActivation', 'negRisk', 'negRiskOther', 'negRiskRequestID', 'new', 'oneDayPriceChange', 'oneHourPriceChange', 'oneMonthPriceChange', 'oneWeekPriceChange', 'oneYearPriceChange', 'orderMinSize', 'orderPriceMinTickSize', 'outcomePrices', 'outcomes', 'pendingDeployment', 'question', 'questionID', 'ready', 'resolutionMechanism', 'resolutionSource', 'resolvedBy', 'restricted', 'rewardsMaxSpread', 'rewardsMinSize', 'rfqEnabled', 'seriesColor', 'showGmpOutcome', 'showGmpSeries', 'slug', 'spread']
+12:29:49   sample: 'Russia-Ukraine Ceasefire before GTA VI?' outcomes ["Yes", "No"] prices ["1", "0"] end 2026-07-31T12:00:00Z closedTime 2026-05-09 04:29:49+00 cid 0x9c1a953fe92c8357f1b646ba25d983aa83e90c525992db14fb726fa895cb5763
+12:34:25 listing: 651 pages by keyset
+12:34:25 listed 65002 closed markets >= $50,000; this shard kept 10835 resolved binaries
+12:34:25 markets to read 10835
+12:34:26 field check, response keys: ['data', 'pagination']; first trade: {"proxy_wallet": "0x61e1d5f5970bb82377a294d59608200cacd66b15", "side": "SELL", "token_id": "47197743673676409383142835961575135787075284106067024531809325881253993786597", "condition_id": "0x43af6df3e5601e8532b22108707fd5c7d5bc002fe51acdfbf945a73e7f0003a3", "size": 50.84, "price": 0.999, "timestamp": 1788133854, "title": "US Open ATP: Tomas Etcheverry vs Vit Kopriva", "slug": "atp-etcheve-kopriva-2026-08-30", "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/atp-tour-b4390c4fb8.jpg", "event_slug": "atp-etcheve-kopriva-2026-08-30", "outcome": "Tomas Etcheverry", "outcome_index": 0, 
+12:39:34 200 markets read
+12:44:59 400 markets read
+12:49:59 600 markets read
+12:55:15 800 markets read
+12:59:55 1000 markets read
+13:04:28 1200 markets read
+13:09:04 1400 markets read
+13:13:36 1600 markets read
+13:18:26 1800 markets read
+13:23:31 2000 markets read
+13:28:48 2200 markets read
+13:33:46 2400 markets read
+13:38:37 2600 markets read
+13:43:50 2800 markets read
+13:48:37 3000 markets read
+13:53:05 3200 markets read
+13:57:30 3400 markets read
+14:01:59 3600 markets read
+14:06:32 3800 markets read
+14:11:26 4000 markets read
+14:16:10 4200 markets read
+14:20:09 4400 markets read
+14:24:31 4600 markets read
+14:29:06 4800 markets read
+14:33:50 5000 markets read
+14:38:35 5200 markets read
+14:43:21 5400 markets read
+14:48:11 5600 markets read
+14:53:13 5800 markets read
+14:58:11 6000 markets read
+15:02:53 6200 markets read
+15:07:48 6400 markets read
+15:12:32 6600 markets read
+15:17:07 6800 markets read
+15:21:28 7000 markets read
+15:26:13 7200 markets read
+15:30:57 7400 markets read
+15:35:26 7600 markets read
+15:39:09 7800 markets read
+15:43:27 8000 markets read
+15:48:00 8200 markets read
+15:52:54 8400 markets read
+15:57:53 8600 markets read
+16:02:58 8800 markets read
+16:07:39 9000 markets read
+16:12:44 9200 markets read
+16:17:34 9400 markets read
+16:22:24 9600 markets read
+16:27:00 9800 markets read
+16:31:46 10000 markets read
+16:36:21 10200 markets read
+16:41:05 10400 markets read
+16:46:02 10600 markets read
+16:50:20 10800 markets read
+16:51:14 done: 0 unread, 92 capped at 8000 trades

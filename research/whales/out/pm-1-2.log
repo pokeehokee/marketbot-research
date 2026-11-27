@@ -1,0 +1,61 @@
+12:29:48 field check, first market keys: ['acceptingOrders', 'acceptingOrdersTimestamp', 'active', 'approved', 'archived', 'automaticallyActive', 'automaticallyResolved', 'bestAsk', 'clearBookOnStart', 'clobTokenIds', 'closed', 'closedTime', 'comboStatus', 'conditionId', 'createdAt', 'customLiveness', 'cyom', 'deploying', 'deployingTimestamp', 'description', 'enableOrderBook', 'endDate', 'endDateIso', 'events', 'fallbackResolutionType', 'featured', 'feeSchedule', 'feeType', 'feesEnabled', 'funded', 'gameStartTime', 'groupItemThreshold', 'groupItemTitle', 'hasReviewedDates', 'holdingRewardsEnabled', 'icon', 'id', 'image', 'lastTradePrice', 'makerBaseFee', 'manualActivation', 'negRisk', 'negRiskOther', 'negRiskRequestID', 'new', 'oneDayPriceChange', 'oneHourPriceChange', 'oneMonthPriceChange', 'oneWeekPriceChange', 'oneYearPriceChange', 'orderMinSize', 'orderPriceMinTickSize', 'outcomePrices', 'outcomes', 'pendingDeployment', 'question', 'questionID', 'ready', 'resolutionMechanism', 'resolutionSource', 'resolvedBy', 'restricted', 'rewardsMaxSpread', 'rewardsMinSize', 'rfqEnabled', 'seriesColor', 'showGmpOutcome', 'showGmpSeries', 'slug', 'spread']
+12:29:48   sample: 'Russia-Ukraine Ceasefire before GTA VI?' outcomes ["Yes", "No"] prices ["1", "0"] end 2026-07-31T12:00:00Z closedTime 2026-05-09 04:29:49+00 cid 0x9c1a953fe92c8357f1b646ba25d983aa83e90c525992db14fb726fa895cb5763
+12:33:21 listing: 651 pages by keyset
+12:33:21 listed 65002 closed markets >= $50,000; this shard kept 10990 resolved binaries
+12:33:21 markets to read 10990
+12:33:22 field check, response keys: ['data', 'pagination']; first trade: {"proxy_wallet": "0x055365e1de084aa8cae321e12903fb15126b006b", "side": "SELL", "token_id": "114009101994248487882262090660733880737890977014266109949631492807263609540775", "condition_id": "0xb3f227b8aa29c238dd5953646e6f58e96f30a83c14b943b15c4171e8c8000a0d", "size": 5.3, "price": 0.999, "timestamp": 1783307848, "title": "Mexico vs. England: England O/U 1.5", "slug": "fifwc-mex-eng-2026-07-05-team-total-away-1pt5", "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/soccer ball-bba4025f77.png", "event_slug": "fifwc-mex-eng-2026-07-05-more-markets", "outcome": "Over", "outcome_index": 
+12:37:53 200 markets read
+12:42:10 400 markets read
+12:46:39 600 markets read
+12:51:22 800 markets read
+12:55:43 1000 markets read
+12:59:41 1200 markets read
+13:03:45 1400 markets read
+13:07:52 1600 markets read
+13:12:13 1800 markets read
+13:16:27 2000 markets read
+13:20:55 2200 markets read
+13:25:59 2400 markets read
+13:30:07 2600 markets read
+13:34:02 2800 markets read
+13:38:16 3000 markets read
+13:42:39 3200 markets read
+13:47:04 3400 markets read
+13:51:22 3600 markets read
+13:55:49 3800 markets read
+14:00:05 4000 markets read
+14:04:29 4200 markets read
+14:09:05 4400 markets read
+14:13:42 4600 markets read
+14:17:59 4800 markets read
+14:21:40 5000 markets read
+14:26:05 5200 markets read
+14:30:13 5400 markets read
+14:34:39 5600 markets read
+14:39:03 5800 markets read
+14:43:24 6000 markets read
+14:47:41 6200 markets read
+14:52:28 6400 markets read
+14:57:07 6600 markets read
+15:01:34 6800 markets read
+15:06:10 7000 markets read
+15:10:21 7200 markets read
+15:14:38 7400 markets read
+15:18:32 7600 markets read
+15:22:54 7800 markets read
+15:27:24 8000 markets read
+15:31:22 8200 markets read
+15:34:49 8400 markets read
+15:38:14 8600 markets read
+15:41:40 8800 markets read
+15:44:58 9000 markets read
+15:48:55 9200 markets read
+15:52:46 9400 markets read
+15:57:22 9600 markets read
+16:01:20 9800 markets read
+16:05:35 10000 markets read
+16:09:37 10200 markets read
+16:13:58 10400 markets read
+16:18:42 10600 markets read
+16:22:56 10800 markets read
+16:26:56 done: 0 unread, 95 capped at 8000 trades

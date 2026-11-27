@@ -1,0 +1,13 @@
+markets 64742 (train 30839, holdout 33903, 496 capped); train prints 45064962; cut 2026-09-01
+wallets with >= 15 train markets: 100835; sharp 195
+holdout prints read 33103590
+delay 60s, hold to resolution, before fees:
+  sharp: n=40438 days=85 EV +0.28c/contract [-0.35, +0.90] win 54.6% avg price 0.543 multiple 1.01 per $1 +0.005
+  control (active, not sharp): n=4835360 days=88 EV -0.82c/contract [-1.01, -0.65] win 52.6% avg price 0.534 multiple 0.98 per $1 -0.015
+delay 300s, hold to resolution, before fees:
+  sharp: n=36994 days=85 EV +0.14c/contract [-0.48, +0.76] win 54.2% avg price 0.541 multiple 1.00 per $1 +0.003
+  control (active, not sharp): n=2982553 days=88 EV -0.36c/contract [-0.61, -0.12] win 52.2% avg price 0.525 multiple 0.99 per $1 -0.007
+  sharp, price 0.01-0.20: n=2973 days=81 EV +1.27c/contract [-0.14, +2.71] win 12.2% avg price 0.109 multiple 1.12 per $1 +0.116
+  sharp, price 0.20-0.50: n=13941 days=83 EV +1.20c/contract [+0.14, +2.34] win 38.5% avg price 0.373 multiple 1.03 per $1 +0.032
+  sharp, price 0.50-0.80: n=17268 days=84 EV -0.35c/contract [-1.42, +0.70] win 62.7% avg price 0.630 multiple 0.99 per $1 -0.006
+  sharp, price 0.80-0.99: n=6112 days=84 EV -0.51c/contract [-1.52, +0.45] win 88.0% avg price 0.885 multiple 0.99 per $1 -0.006

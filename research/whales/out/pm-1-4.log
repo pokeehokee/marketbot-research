@@ -1,0 +1,60 @@
+12:29:48 field check, first market keys: ['acceptingOrders', 'acceptingOrdersTimestamp', 'active', 'approved', 'archived', 'automaticallyActive', 'automaticallyResolved', 'bestAsk', 'clearBookOnStart', 'clobTokenIds', 'closed', 'closedTime', 'comboStatus', 'conditionId', 'createdAt', 'customLiveness', 'cyom', 'deploying', 'deployingTimestamp', 'description', 'enableOrderBook', 'endDate', 'endDateIso', 'events', 'fallbackResolutionType', 'featured', 'feeSchedule', 'feeType', 'feesEnabled', 'funded', 'gameStartTime', 'groupItemThreshold', 'groupItemTitle', 'hasReviewedDates', 'holdingRewardsEnabled', 'icon', 'id', 'image', 'lastTradePrice', 'makerBaseFee', 'manualActivation', 'negRisk', 'negRiskOther', 'negRiskRequestID', 'new', 'oneDayPriceChange', 'oneHourPriceChange', 'oneMonthPriceChange', 'oneWeekPriceChange', 'oneYearPriceChange', 'orderMinSize', 'orderPriceMinTickSize', 'outcomePrices', 'outcomes', 'pendingDeployment', 'question', 'questionID', 'ready', 'resolutionMechanism', 'resolutionSource', 'resolvedBy', 'restricted', 'rewardsMaxSpread', 'rewardsMinSize', 'rfqEnabled', 'seriesColor', 'showGmpOutcome', 'showGmpSeries', 'slug', 'spread']
+12:29:48   sample: 'Russia-Ukraine Ceasefire before GTA VI?' outcomes ["Yes", "No"] prices ["1", "0"] end 2026-07-31T12:00:00Z closedTime 2026-05-09 04:29:49+00 cid 0x9c1a953fe92c8357f1b646ba25d983aa83e90c525992db14fb726fa895cb5763
+12:33:21 listing: 651 pages by keyset
+12:33:21 listed 65002 closed markets >= $50,000; this shard kept 10789 resolved binaries
+12:33:21 markets to read 10789
+12:33:22 field check, response keys: ['data', 'pagination']; first trade: {"proxy_wallet": "0x63ae63907d60a4e2fa5d704ed73c6cc178a068f6", "side": "SELL", "token_id": "82090000453971696566869707319576462125236334052293984598377335743986736627192", "condition_id": "0x68c99502fd0dfacdb3a00b780bb984a65f24e3e8bb2546ff5509c624db0001e5", "size": 15.61, "price": 0.999, "timestamp": 1783441289, "title": "Bitcoin Up or Down - July 7, 12:15PM-12:20PM ET", "slug": "btc-updown-5m-1783440900", "icon": "https://polymarket-upload.s3.us-east-2.amazonaws.com/BTC+fullsize.png", "event_slug": "btc-updown-5m-1783440900", "outcome": "Down", "outcome_index": 1, "name": "", "pseudonym": "",
+12:37:46 200 markets read
+12:42:27 400 markets read
+12:46:53 600 markets read
+12:50:53 800 markets read
+12:55:14 1000 markets read
+12:59:30 1200 markets read
+13:03:56 1400 markets read
+13:08:10 1600 markets read
+13:12:29 1800 markets read
+13:16:58 2000 markets read
+13:21:40 2200 markets read
+13:26:29 2400 markets read
+13:31:15 2600 markets read
+13:35:50 2800 markets read
+13:40:28 3000 markets read
+13:44:54 3200 markets read
+13:49:49 3400 markets read
+13:54:18 3600 markets read
+13:58:32 3800 markets read
+14:02:49 4000 markets read
+14:07:10 4200 markets read
+14:11:16 4400 markets read
+14:15:32 4600 markets read
+14:19:55 4800 markets read
+14:24:02 5000 markets read
+14:28:29 5200 markets read
+14:33:15 5400 markets read
+14:37:38 5600 markets read
+14:42:14 5800 markets read
+14:47:01 6000 markets read
+14:52:11 6200 markets read
+14:56:50 6400 markets read
+15:01:08 6600 markets read
+15:05:59 6800 markets read
+15:10:27 7000 markets read
+15:14:53 7200 markets read
+15:19:04 7400 markets read
+15:23:22 7600 markets read
+15:27:47 7800 markets read
+15:32:28 8000 markets read
+15:36:00 8200 markets read
+15:39:32 8400 markets read
+15:43:02 8600 markets read
+15:47:13 8800 markets read
+15:51:16 9000 markets read
+15:55:30 9200 markets read
+15:59:48 9400 markets read
+16:04:36 9600 markets read
+16:08:57 9800 markets read
+16:13:12 10000 markets read
+16:17:36 10200 markets read
+16:21:48 10400 markets read
+16:26:05 10600 markets read
+16:30:35 done: 0 unread, 68 capped at 8000 trades

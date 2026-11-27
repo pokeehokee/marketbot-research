@@ -50,3 +50,36 @@ class TestMemeRec(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestMemeScore(unittest.TestCase):
+    def setUp(self):
+        import meme_score
+        self.s = meme_score
+
+    def test_stop_gaps_to_the_low(self):
+        c = [(0, 1.0, 1.0, 1.0, 1.0), (60, 1.0, 1.0, 0.5, 0.6)]
+        r = self.s.simulate(c, -30)
+        self.assertLess(r["x"], 0.6)      # filled at the low, not at -12%
+        self.assertFalse(r["rug"])
+
+    def test_stop_before_target_in_one_bucket(self):
+        c = [(0, 1.0, 1.0, 1.0, 1.0), (60, 1.0, 3.0, 0.8, 2.5)]
+        r = self.s.simulate(c, -30)
+        self.assertLess(r["x"], 1.0)
+
+    def test_take_profits_then_time_stop(self):
+        c = [(0, 1.0, 1.0, 1.0, 1.0)] + [(60 * i, 2.2, 2.2, 2.1, 2.2) for i in range(1, 40)]
+        r = self.s.simulate(c, -30)
+        self.assertGreater(r["x"], 1.5)
+
+    def test_rug_zeroes_the_rest(self):
+        c = [(0, 1.0, 1.0, 1.0, 1.0), (60, 1.0, 1.0, 0.05, 0.05)]
+        r = self.s.simulate(c, -30)
+        self.assertTrue(r["rug"])
+        self.assertEqual(r["x"], 0.0)
+
+    def test_entry_never_uses_the_signal_bucket(self):
+        c = [(0, 0.5, 0.5, 0.5, 0.5), (60, 1.0, 1.0, 1.0, 1.0)]
+        r = self.s.simulate(c, 10)        # signal at 10s, latency 30 -> first start >= 40 is 60
+        self.assertAlmostEqual(r["x"], 1.0 * (1 - self.s.SLIP_OUT) / (1 + self.s.SLIP_IN), places=6)

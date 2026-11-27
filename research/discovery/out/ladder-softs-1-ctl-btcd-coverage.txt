@@ -1,2 +1,2 @@
 series markets read trades off_grid_closes grid_s days_read
-KXBTCD 121394 92505 12276128 0 3600 22
+KXBTCD 122226 122226 15699120 0 3600 30

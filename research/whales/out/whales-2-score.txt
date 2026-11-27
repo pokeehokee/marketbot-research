@@ -1,0 +1,94 @@
+19349 events from 355 wallets over 151 days (2026-06-30 to 2026-11-27); holdout from 2026-09-28
+kinds: add 7294, close 1348, flip 1968, open 1434, reduce 7305
+
+== Context: the hour BEFORE an entry, in the trade's direction (do they chase?) ==
+  n  10696 d 151 w  330  net   -14.1bp [  -18.5,    -9.9]  win  43.9%  x 0.88  (cost 0; + means they buy after a rise)
+
+######## copier cost 4 bps round trip ########
+train cells 160; selected (BH q=0.1, lower bound > 0): 0; random-sign null selects 0
+
+-- Train, the one pre-registered cell per family: 60 s late, 1 hour hold --
+  opens+adds+flips       n   3729 d  90 w  215  net    -3.0bp [   -5.2,    -1.1]  win  48.1%  x 0.94
+  opens and flips only   n    871 d  89 w  161  net    -1.7bp [   -5.0,    +1.9]  win  49.0%  x 0.97
+  >= $1M                 n    136 d  51 w   20  net    -0.9bp [  -10.2,    +7.5]  win  46.3%  x 1.11
+  >= $250k taker         n    664 d  86 w   75  net    -5.8bp [  -11.3,    -1.2]  win  43.4%  x 1.01
+  closes and reduces     n   3643 d  90 w  223  net    -5.9bp [   -8.4,    -3.7]  win  45.4%  x 0.91
+  BTC entries            n   2209 d  90 w  164  net    -2.0bp [   -4.1,    -0.0]  win  48.1%  x 0.97
+  ETH entries            n   1040 d  89 w  124  net    -5.9bp [  -10.8,    -0.8]  win  47.3%  x 0.87
+  SOL entries            n    480 d  78 w   84  net    -1.5bp [  -10.1,    +7.2]  win  50.0%  x 0.95
+
+-- How much survives the delay (opens+adds+flips, train), net per horizon --
+  late    0s:    1m   -3.3bp     5m   -1.5bp    15m   -2.6bp    60m   -2.2bp   240m   -1.0bp
+  late   60s:    1m   -3.4bp     5m   -2.3bp    15m   -3.7bp    60m   -3.0bp   240m   -1.9bp
+  late  300s:    1m   -4.2bp     5m   -4.7bp    15m   -5.3bp    60m   -4.5bp   240m   -4.1bp
+  late  900s:    1m   -4.4bp     5m   -4.2bp    15m   -4.0bp    60m   -3.4bp   240m   -2.7bp
+
+-- Selected on train, read on the HOLDOUT --
+  nothing selected
+
+-- Copy list (wallets that won on train, t >= 2, >= 15 entries), HOLDOUT only, BH over its cells --
+  late    0s hold    1m  list   0 wallets  too few days  
+  late    0s hold    5m  list   3 wallets  n    255 d  40 w    2  net    +5.5bp [   +2.1,    +8.9]  win  54.1%  x 1.53  PASS
+  late    0s hold   15m  list   0 wallets  too few days  
+  late    0s hold   60m  list   1 wallets  n    241 d  40 w    1  net    +0.6bp [   -8.5,   +10.6]  win  51.9%  x 0.95  
+  late    0s hold  240m  list   4 wallets  n    308 d  44 w    4  net   +10.4bp [  -12.8,   +35.7]  win  57.1%  x 0.92  
+  late   60s hold    1m  list   0 wallets  too few days  
+  late   60s hold    5m  list   0 wallets  too few days  
+  late   60s hold   15m  list   0 wallets  too few days  
+  late   60s hold   60m  list   1 wallets  n    241 d  40 w    1  net    -5.1bp [  -15.4,    +6.1]  win  49.0%  x 0.84  
+  late   60s hold  240m  list   4 wallets  n    308 d  44 w    4  net    +6.1bp [  -17.3,   +31.3]  win  56.5%  x 0.87  
+  late  300s hold    1m  list   0 wallets  too few days  
+  late  300s hold    5m  list   0 wallets  too few days  
+  late  300s hold   15m  list   0 wallets  too few days  
+  late  300s hold   60m  list   0 wallets  too few days  
+  late  300s hold  240m  list   2 wallets  n    242 d  40 w    2  net    -0.1bp [  -25.4,   +27.4]  win  57.4%  x 0.74  
+  late  900s hold    1m  list   0 wallets  too few days  
+  late  900s hold    5m  list   0 wallets  too few days  
+  late  900s hold   15m  list   0 wallets  too few days  
+  late  900s hold   60m  list   0 wallets  too few days  
+  late  900s hold  240m  list   4 wallets  n    308 d  44 w    4  net    +4.4bp [  -20.2,   +31.7]  win  58.1%  x 0.78  
+
+######## copier cost 10 bps round trip ########
+train cells 160; selected (BH q=0.1, lower bound > 0): 0; random-sign null selects 0
+
+-- Train, the one pre-registered cell per family: 60 s late, 1 hour hold --
+  opens+adds+flips       n   3729 d  90 w  215  net    -9.0bp [  -11.2,    -7.1]  win  42.1%  x 0.92
+  opens and flips only   n    871 d  89 w  161  net    -7.7bp [  -11.0,    -4.1]  win  43.1%  x 0.94
+  >= $1M                 n    136 d  51 w   20  net    -6.9bp [  -16.2,    +1.5]  win  41.2%  x 1.05
+  >= $250k taker         n    664 d  86 w   75  net   -11.8bp [  -17.3,    -7.2]  win  38.6%  x 0.94
+  closes and reduces     n   3643 d  90 w  223  net   -11.9bp [  -14.4,    -9.7]  win  39.1%  x 0.89
+  BTC entries            n   2209 d  90 w  164  net    -8.0bp [  -10.1,    -6.0]  win  41.6%  x 0.93
+  ETH entries            n   1040 d  89 w  124  net   -11.9bp [  -16.8,    -6.8]  win  41.5%  x 0.86
+  SOL entries            n    480 d  78 w   84  net    -7.5bp [  -16.1,    +1.2]  win  45.2%  x 0.95
+
+-- How much survives the delay (opens+adds+flips, train), net per horizon --
+  late    0s:    1m   -9.3bp     5m   -7.5bp    15m   -8.6bp    60m   -8.2bp   240m   -7.0bp
+  late   60s:    1m   -9.4bp     5m   -8.3bp    15m   -9.7bp    60m   -9.0bp   240m   -7.9bp
+  late  300s:    1m  -10.2bp     5m  -10.7bp    15m  -11.3bp    60m  -10.5bp   240m  -10.1bp
+  late  900s:    1m  -10.4bp     5m  -10.2bp    15m  -10.0bp    60m   -9.4bp   240m   -8.7bp
+
+-- Selected on train, read on the HOLDOUT --
+  nothing selected
+
+-- Copy list (wallets that won on train, t >= 2, >= 15 entries), HOLDOUT only, BH over its cells --
+  late    0s hold    1m  list   0 wallets  too few days  
+  late    0s hold    5m  list   0 wallets  too few days  
+  late    0s hold   15m  list   0 wallets  too few days  
+  late    0s hold   60m  list   0 wallets  too few days  
+  late    0s hold  240m  list   1 wallets  n    241 d  40 w    1  net    +1.3bp [  -22.9,   +27.5]  win  56.4%  x 0.79  
+  late   60s hold    1m  list   0 wallets  too few days  
+  late   60s hold    5m  list   0 wallets  too few days  
+  late   60s hold   15m  list   0 wallets  too few days  
+  late   60s hold   60m  list   0 wallets  too few days  
+  late   60s hold  240m  list   1 wallets  n    241 d  40 w    1  net    -3.6bp [  -28.0,   +23.0]  win  54.8%  x 0.77  
+  late  300s hold    1m  list   0 wallets  too few days  
+  late  300s hold    5m  list   0 wallets  too few days  
+  late  300s hold   15m  list   0 wallets  too few days  
+  late  300s hold   60m  list   0 wallets  too few days  
+  late  300s hold  240m  list   2 wallets  n    242 d  40 w    2  net    -6.1bp [  -31.4,   +21.4]  win  54.1%  x 0.75  
+  late  900s hold    1m  list   0 wallets  too few days  
+  late  900s hold    5m  list   0 wallets  too few days  
+  late  900s hold   15m  list   0 wallets  too few days  
+  late  900s hold   60m  list   0 wallets  too few days  
+  late  900s hold  240m  list   2 wallets  n    242 d  40 w    2  net    -4.1bp [  -30.4,   +24.8]  win  55.8%  x 0.73  
+

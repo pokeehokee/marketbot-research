@@ -1,0 +1,90 @@
+name: Polymarket sharp-wallet test (public research repo)
+
+# Variant 6 of the whale mutations: do wallets that were right on resolved Polymarket markets
+# keep being right? research/whales/pm_sharp.py has the method. Read-only and unauthenticated:
+# Gamma markets and data-api public trades, GET only. No secret is referenced and nothing here
+# can trade (international Polymarket is close-only for US residents anyway: data source only).
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        default: "1"
+      budget:
+        default: "300"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pm-sharp
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore (resume)
+        uses: actions/cache/restore@v4
+        with:
+          path: research/whales/pm_${{ inputs.tag }}_${{ matrix.shard }}.db
+          key: pm-${{ inputs.tag }}-${{ matrix.shard }}-${{ github.run_id }}
+          restore-keys: pm-${{ inputs.tag }}-${{ matrix.shard }}-
+      - name: Tests
+        run: python3 -m unittest discover -s research/whales -p 'test_*.py'
+      - name: Read markets and trades
+        run: |
+          set -o pipefail
+          mkdir -p research/whales/out
+          timeout $(( ${{ inputs.budget }} * 60 + 600 )) \
+            python3 -I research/whales/pm_sharp.py --tag "${{ inputs.tag }}" \
+              --shard ${{ matrix.shard }}/3 --budget-min ${{ inputs.budget }} \
+            | tee research/whales/out/pm-${{ inputs.tag }}-${{ matrix.shard }}.log
+      - name: Save
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: research/whales/pm_${{ inputs.tag }}_${{ matrix.shard }}.db
+          key: pm-${{ inputs.tag }}-${{ matrix.shard }}-${{ github.run_id }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pm-${{ inputs.tag }}-${{ matrix.shard }}
+          path: |
+            research/whales/pm_${{ inputs.tag }}_${{ matrix.shard }}.db
+            research/whales/out/pm-${{ inputs.tag }}-${{ matrix.shard }}*
+          retention-days: 14
+
+  score:
+    needs: pull
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: pm-${{ inputs.tag }}-*
+          path: dl
+          merge-multiple: true
+      - name: Score
+        run: |
+          mkdir -p research/whales/out
+          cp dl/research/whales/out/* research/whales/out/ 2>/dev/null || true
+          cat research/whales/out/pm-${{ inputs.tag }}-*-coverage.txt || true
+          python3 -I research/whales/pm_sharp.py --tag "${{ inputs.tag }}" \
+            --score 'dl/research/whales/pm_${{ inputs.tag }}_*.db' \
+            | tee research/whales/out/pm-${{ inputs.tag }}-score.txt
+      - name: Commit
+        if: always()
+        run: |
+          git config user.name "whales"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/whales/out
+          git commit -m "whales: pm sharp ${{ inputs.tag }}" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep $((i * 7)); done

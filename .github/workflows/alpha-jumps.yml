@@ -53,8 +53,10 @@ jobs:
       - name: Export
         if: always()
         run: |
+          mkdir -p research/alpha/out/cheap
           python3 -I research/alpha/jumps.py --tag "${{ steps.p.outputs.tag }}-${{ matrix.shard }}" \
-            --export research/alpha/out/${{ steps.p.outputs.tag }}-${{ matrix.shard }}.csv.gz
+            --export research/alpha/out/${{ steps.p.outputs.tag }}-${{ matrix.shard }}.csv.gz \
+            --export-cheap research/alpha/out/cheap/${{ steps.p.outputs.tag }}-${{ matrix.shard }}.csv.gz
       - name: Save this shard's database
         if: always()
         uses: actions/cache/save@v4

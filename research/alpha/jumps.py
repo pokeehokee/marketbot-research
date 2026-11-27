@@ -279,6 +279,77 @@ def export(dbpath, path):
     return n
 
 
+# --- cheap-contract rows for cheap_screen.py --------------------------------
+CHEAP_MAX = 0.15
+CHEAP_OFFSETS_H = (6, 24, 72, 168)
+CHEAP_COLS = ("source", "series", "category", "event", "ticker", "day", "offset_h", "q", "cheap_yes",
+              "won", "age_h", "dq1h", "dq6h", "dq24h", "vol24", "n24", "rng24", "jump24")
+
+
+def cheap_rows(bars, close_ts, result):
+    """One row per decision time (CHEAP_OFFSETS_H before close) at which a side traded at
+    CHEAP_MAX or less. Everything is read from bars that ENDED at or before t, and every
+    price is the cheap side's. jump24: +1 the cheap side rose 15c+ inside 30 min in the
+    last 24h, -1 it fell 15c+ (crashed into cheapness), 0 neither, None no history."""
+    out = []
+    done = [b for b in bars]
+    for off in CHEAP_OFFSETS_H:
+        t = close_ts - off * 3600
+        i = _idx_at_or_before(done, t - BAR)       # bar must have ENDED by t
+        if i < 0:
+            continue
+        p = done[i][1]
+        if CHEAP_MAX < p < 1 - CHEAP_MAX or not (0 < p < 1):
+            continue
+        s = 1 if p <= CHEAP_MAX else -1
+        q = p if s > 0 else 1 - p
+
+        def cheap_at(tt):
+            j = _idx_at_or_before(done[: i + 1], tt - BAR)
+            return None if j < 0 else (done[j][1] if s > 0 else 1 - done[j][1])
+        win24 = [b for b in done[: i + 1] if b[0] + BAR > t - 86400]
+        jump = None
+        if len(done[: i + 1]) > 1:
+            jump = 0
+            sub = done[: i + 1]
+            for k, (b0, pk, _, _) in enumerate(sub):
+                if b0 + BAR <= t - 86400:
+                    continue
+                j = _idx_at_or_before(sub, b0 - REF_LAG)
+                if j >= 0 and b0 - sub[j][0] <= REF_MAX_AGE:
+                    d = (pk - sub[j][1]) * s
+                    if abs(d) >= JUMP:
+                        jump = 1 if d > 0 else -1
+        q1, q6, q24 = cheap_at(t - 3600), cheap_at(t - 6 * 3600), cheap_at(t - 86400)
+        won = (1 if result == "yes" else 0) if s > 0 else (1 if result == "no" else 0)
+        cprices = [(b[1] if s > 0 else 1 - b[1]) for b in win24]
+        out.append((off, q, 1 if s > 0 else 0, won, (t - done[i][0] - BAR) / 3600,
+                    None if q1 is None else q - q1, None if q6 is None else q - q6,
+                    None if q24 is None else q - q24,
+                    math.log1p(sum(b[2] for b in win24)), sum(b[3] for b in win24),
+                    (max(cprices) - min(cprices)) if len(cprices) >= 2 else None, jump))
+    return out
+
+
+def export_cheap(dbpath, path):
+    c = db(dbpath)
+    cat = dict(c.execute("SELECT ticker, category FROM series").fetchall())
+    n = 0
+    with gzip.open(path, "wt") as f:
+        f.write(",".join(CHEAP_COLS) + "\n")
+        for tk, ev, s, close_ts, res in c.execute(
+                "SELECT ticker, event, series, close_ts, result FROM market WHERE done=1").fetchall():
+            bars = c.execute("SELECT b, vwap, contracts, n FROM bar WHERE ticker=? ORDER BY b",
+                             (tk,)).fetchall()
+            for r in cheap_rows(bars, close_ts, res):
+                day = time.strftime("%Y-%m-%d", time.gmtime(close_ts))
+                row = ("news", s, cat.get(s) or "", ev, tk, day) + r
+                f.write(",".join("" if v is None else (f"{v:.5g}" if isinstance(v, float) else str(v))
+                                 for v in row) + "\n")
+                n += 1
+    return n
+
+
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--categories", default="")
@@ -286,9 +357,14 @@ if __name__ == "__main__":
     ap.add_argument("--budget-min", type=float, default=300)
     ap.add_argument("--tag", required=True)
     ap.add_argument("--export")
+    ap.add_argument("--export-cheap")
     a = ap.parse_args()
     dbpath = os.path.join(HERE, f"jumps_{a.tag}.db")
-    if a.export:
-        print("jumps", export(dbpath, a.export)); sys.exit(0)
+    if a.export or a.export_cheap:
+        if a.export:
+            print("jumps", export(dbpath, a.export))
+        if a.export_cheap:
+            print("cheap rows", export_cheap(dbpath, a.export_cheap))
+        sys.exit(0)
     run([x.strip() for x in a.categories.split(",") if x.strip()], a.days, a.budget_min, dbpath,
         log=lambda s: print(s, flush=True))

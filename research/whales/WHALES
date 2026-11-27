@@ -1,3 +1,4 @@
-days=60
+days=150
 budget=300
-tag=whales-1
+tag=whales-2
+args=--universe 900 --min-account 25000 --max-account 250000 --min-notional 10000

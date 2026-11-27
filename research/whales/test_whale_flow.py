@@ -105,3 +105,19 @@ class TestScoring(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestWhales2(unittest.TestCase):
+    def test_account_band_excludes_the_big_universe(self):
+        rows = [{"ethAddress": "0xA", "accountValue": "300000"}, {"ethAddress": "0xB", "accountValue": "60000"},
+                {"ethAddress": "0xC", "accountValue": "20000"}]
+        self.assertEqual([a for a, _ in w.pick_universe(rows, min_account=25_000, max_account=250_000)], ["0xb"])
+
+    def test_closed_pnl_is_summed_per_event(self):
+        fills = [{"coin": "BTC", "px": "100", "sz": "1", "side": "A", "time": 0, "startPosition": "2",
+                  "closedPnl": "5"},
+                 {"coin": "BTC", "px": "101", "sz": "1", "side": "A", "time": 10_000, "startPosition": "1",
+                  "closedPnl": "-2"}]
+        e = w.events(fills)
+        self.assertEqual(len(e), 1)
+        self.assertEqual((e[0]["kind"], e[0]["pnl"], e[0]["px_first"]), ("close", 3.0, 100.0))

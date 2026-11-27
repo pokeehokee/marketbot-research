@@ -134,12 +134,13 @@ def hkey(s):
     return zlib.crc32(s.lower().encode())
 
 
-def pick_universe(rows, n=UNIVERSE, min_account=MIN_ACCOUNT):
-    """Largest account values. PnL is never read here."""
+def pick_universe(rows, n=UNIVERSE, min_account=MIN_ACCOUNT, max_account=None):
+    """Largest account values in [min_account, max_account). PnL is never read here: the
+    leaderboard's PnL is as of today, so ranking on it would select on the test period."""
     out = []
     for r in rows:
         a, v = r.get("ethAddress"), f(r.get("accountValue"))
-        if a and v is not None and v >= min_account:
+        if a and v is not None and v >= min_account and (max_account is None or v < max_account):
             out.append((v, a.lower()))
     out.sort(reverse=True)
     return [(a, v) for v, a in out[:n]]
@@ -170,6 +171,7 @@ def events(fills, merge=MERGE):
             sgn = 1 if x["side"] == "B" else -1
             sz, px, t = f(x["sz"]), f(x["px"]), int(x["time"]) / 1000
             sp = f(x.get("startPosition"))
+            pnl = f(x.get("closedPnl")) or 0.0
             if sz is None or px is None or sp is None:
                 continue
             if cur and cur["dir"] == sgn and t - cur["t_last"] <= merge:
@@ -178,12 +180,13 @@ def events(fills, merge=MERGE):
                 cur["notional"] += px * sz
                 cur["taker"] += px * sz if x.get("crossed") else 0.0
                 cur["n"] += 1
+                cur["pnl"] += pnl
                 continue
             if cur:
                 out.append(cur)
             cur = {"coin": coin, "dir": sgn, "t_first": t, "t_last": t, "start": sp,
                    "end": sp + sgn * sz, "notional": px * sz,
-                   "taker": px * sz if x.get("crossed") else 0.0, "n": 1}
+                   "taker": px * sz if x.get("crossed") else 0.0, "n": 1, "pnl": pnl, "px_first": px}
         if cur:
             out.append(cur)
     for e in out:
@@ -230,6 +233,8 @@ def db(path):
     CREATE TABLE IF NOT EXISTS candle(coin TEXT, k INTEGER, o REAL, PRIMARY KEY(coin, k));
     CREATE TABLE IF NOT EXISTS funding(coin TEXT, t INTEGER, rate REAL, premium REAL, PRIMARY KEY(coin, t));
     """)
+    if "pnl" not in [r[1] for r in c.execute("PRAGMA table_info(fill)")]:
+        c.execute("ALTER TABLE fill ADD COLUMN pnl TEXT")   # closedPnl; NULL on older pulls
     return c
 
 
@@ -238,7 +243,7 @@ def meta_get(c, k):
     return r[0] if r else None
 
 
-def load_universe(c, shard, nshards):
+def load_universe(c, shard, nshards, a=None):
     if c.execute("SELECT COUNT(*) FROM wallet").fetchone()[0]:
         return
     try:
@@ -248,11 +253,13 @@ def load_universe(c, shard, nshards):
         return
     rows = d.get("leaderboardRows", d if isinstance(d, list) else [])
     log(f"leaderboard rows {len(rows)}; keys of the first: {sorted(rows[0].keys()) if rows else None}")
-    uni = pick_universe(rows)
+    uni = pick_universe(rows, n=getattr(a, "universe", UNIVERSE),
+                        min_account=getattr(a, "min_account", MIN_ACCOUNT),
+                        max_account=getattr(a, "max_account", None))
     mine = [(a, v) for a, v in uni if hkey(a) % nshards == shard]
     c.executemany("INSERT OR IGNORE INTO wallet(addr, account) VALUES (?,?)", mine)
     c.commit()
-    log(f"universe {len(uni)} wallets with account >= ${MIN_ACCOUNT:,.0f}; this shard {len(mine)}; "
+    log(f"universe {len(uni)} wallets with account >= ${getattr(a, 'min_account', MIN_ACCOUNT):,.0f}; this shard {len(mine)}; "
         f"account median ${sorted(v for _, v in uni)[len(uni)//2]:,.0f}" if uni else "universe empty")
 
 
@@ -268,9 +275,10 @@ def pull_wallet(c, addr, start_ms, end_ms):
             break
         before = c.total_changes
         keep = [x for x in page if x.get("coin") in COINS]
-        c.executemany("INSERT OR IGNORE INTO fill VALUES (?,?,?,?,?,?,?,?,?,?)",
+        c.executemany("INSERT OR IGNORE INTO fill VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                       [(addr, str(x.get("tid")), x["coin"], x["px"], x["sz"], x["side"], int(x["time"]),
-                        x.get("startPosition"), 1 if x.get("crossed") else 0, x.get("dir")) for x in keep])
+                        x.get("startPosition"), 1 if x.get("crossed") else 0, x.get("dir"),
+                        x.get("closedPnl")) for x in keep])
         n += c.total_changes - before
         times = [int(x["time"]) for x in page]
         first = min(times) if first is None else min(first, min(times))
@@ -329,7 +337,7 @@ def run(a):
     t_end = int(meta_get(c, "t_end"))
     t0 = t_end - a.days * 86400
     deadline = time.time() + a.budget_min * 60
-    load_universe(c, shard, nshards)
+    load_universe(c, shard, nshards, a)
     todo = [r[0] for r in c.execute("SELECT addr FROM wallet WHERE done=0 ORDER BY account DESC")]
     log(f"wallets to read {len(todo)}")
     k = 0
@@ -355,7 +363,7 @@ def run(a):
 
 # --- export -----------------------------------------------------------------------
 COLS = (["addr", "coin", "day", "t_last", "dir", "kind", "notional", "taker_share", "n_fills",
-         "account", "wallet_capped", "pre_1h"] +
+         "account", "wallet_capped", "pre_1h", "t_first", "px_first", "closed_pnl"] +
         [f"r_d{dl}_h{h}" for dl in DELAYS for h in HORIZONS])
 
 
@@ -372,16 +380,17 @@ def export(a, path):
         fo.write(",".join(COLS) + "\n")
         for addr, acct, capped in c.execute("SELECT addr, account, capped FROM wallet WHERE done=1").fetchall():
             fills = [{"coin": r[0], "px": r[1], "sz": r[2], "side": r[3], "time": r[4], "startPosition": r[5],
-                      "crossed": r[6]} for r in c.execute(
-                "SELECT coin, px, sz, side, time, start, crossed FROM fill WHERE addr=?", (addr,))]
+                      "crossed": r[6], "closedPnl": r[7]} for r in c.execute(
+                "SELECT coin, px, sz, side, time, start, crossed, pnl FROM fill WHERE addr=?", (addr,))]
+            pnl_known = any(x["closedPnl"] is not None for x in fills)
             for e in events(fills):
-                if e["notional"] < MIN_NOTIONAL or e["t_last"] > t_end:
+                if e["notional"] < getattr(a, "min_notional", MIN_NOTIONAL) or e["t_last"] > t_end:
                     continue
                 keys, opens = cand[e["coin"]]
                 res, pre = outcome(keys, opens, e["t_last"], e["dir"])
                 row = [addr, e["coin"], time.strftime("%Y-%m-%d", time.gmtime(e["t_last"])), int(e["t_last"]),
                        e["dir"], e["kind"], round(e["notional"]), e["taker_share"], e["n"], round(acct or 0),
-                       capped, pre] + [res[(dl, h)] for dl in DELAYS for h in HORIZONS]
+                       capped, pre, int(e["t_first"]), e["px_first"], e["pnl"] if pnl_known else None] + [res[(dl, h)] for dl in DELAYS for h in HORIZONS]
                 fo.write(",".join("" if v is None else (f"{v:.6g}" if isinstance(v, float) else str(v))
                                   for v in row) + "\n")
                 n += 1
@@ -411,6 +420,10 @@ def main(argv=None):
     ap.add_argument("--days", type=int, default=60)
     ap.add_argument("--budget-min", type=int, default=300)
     ap.add_argument("--export")
+    ap.add_argument("--universe", type=int, default=UNIVERSE)
+    ap.add_argument("--min-account", type=float, default=MIN_ACCOUNT)
+    ap.add_argument("--max-account", type=float, default=None)
+    ap.add_argument("--min-notional", type=float, default=MIN_NOTIONAL)
     a = ap.parse_args(argv)
     if a.export:
         export(a, a.export)

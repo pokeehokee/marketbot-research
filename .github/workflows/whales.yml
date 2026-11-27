@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Read parameters
         id: p
-        run: grep -E '^(days|budget|tag)=' research/whales/WHALES >> "$GITHUB_OUTPUT"
+        run: grep -E '^(days|budget|tag|args)=' research/whales/WHALES >> "$GITHUB_OUTPUT"
       - name: Restore this shard's database (resume)
         uses: actions/cache/restore@v4
         with:
@@ -45,13 +45,14 @@ jobs:
           timeout $(( ${{ steps.p.outputs.budget }} * 60 + 900 )) \
             python3 -I research/whales/whale_flow.py --tag "${{ steps.p.outputs.tag }}" \
               --shard ${{ matrix.shard }}/3 --days ${{ steps.p.outputs.days }} \
-              --budget-min ${{ steps.p.outputs.budget }} \
+              --budget-min ${{ steps.p.outputs.budget }} ${{ steps.p.outputs.args }} \
             | tee research/whales/out/${{ steps.p.outputs.tag }}-${{ matrix.shard }}.log
       - name: Export
         if: always()
         run: |
           python3 -I research/whales/whale_flow.py --tag "${{ steps.p.outputs.tag }}" \
             --shard ${{ matrix.shard }}/3 \
+            ${{ steps.p.outputs.args }} \
             --export research/whales/out/${{ steps.p.outputs.tag }}-${{ matrix.shard }}.csv.gz
       - name: Save this shard's database
         if: always()

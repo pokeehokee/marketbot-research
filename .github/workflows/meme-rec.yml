@@ -1,0 +1,68 @@
+name: Meme-pool recorder (Solana, GeckoTerminal public data)
+
+# Forward-records fresh Solana DEX pools so the "Grok Bot" overnight meme-coin prompt, and
+# variants of it, can be scored on rows written down at decision time. Read-only and
+# unauthenticated: GeckoTerminal's public v2 API, GET only. No secret is referenced and
+# nothing here can trade. research/meme/meme_rec.py has the method.
+# Like recorder.yml, each run dispatches the next one itself, because GitHub's schedule is
+# best-effort; the schedule stays as a restarter. Stop: commit research/meme/STOP to main.
+on:
+  schedule:
+    - cron: "7-59/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write     # only to dispatch the next run
+
+concurrency:
+  group: meme-rec
+  cancel-in-progress: false
+
+jobs:
+  rec:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15   # 11 recording; a run must not outlive its slot
+    steps:
+      - uses: actions/checkout@v4
+      - name: Name
+        id: n
+        run: |
+          echo "name=meme-$(date -u +%Y%m%d-%H%M)-${{ github.run_id }}" >> "$GITHUB_OUTPUT"
+          echo "start=$(date -u +%s)" >> "$GITHUB_OUTPUT"
+      - name: Restore tracking state
+        uses: actions/cache/restore@v4
+        with:
+          path: research/meme/state.json
+          key: meme-state-${{ github.run_id }}
+          restore-keys: meme-state-
+      - name: Tests
+        run: python3 -m unittest discover -s research/meme -p 'test_*.py'
+      - name: Record
+        run: |
+          timeout 720 python3 -I research/meme/meme_rec.py --state research/meme/state.json \
+            --out "rec/${{ steps.n.outputs.name }}" --minutes 11
+      - name: Save tracking state
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: research/meme/state.json
+          key: meme-state-${{ github.run_id }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ steps.n.outputs.name }}
+          path: rec/${{ steps.n.outputs.name }}
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Dispatch the next run
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -e research/meme/STOP ]; then echo "STOP present: chain ends here"; exit 0; fi
+          for i in 1 2 3 4; do
+            gh api -X POST "repos/${{ github.repository }}/actions/workflows/meme-rec.yml/dispatches" -f ref=main && exit 0
+            sleep 15
+          done
+          echo "could not dispatch the next run"; exit 1

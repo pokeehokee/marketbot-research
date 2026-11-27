@@ -29,7 +29,8 @@ from collections import defaultdict
 from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ALLOWED = {"gamma-api.polymarket.com": ("/markets",),   # /markets and /markets/keyset "data-api.polymarket.com": ("/v2/trades",)}
+# /markets covers /markets/keyset too (prefix + "/")
+ALLOWED = {"gamma-api.polymarket.com": ("/markets",), "data-api.polymarket.com": ("/v2/trades",)}
 START, END = "2026-07-01", "2026-11-20"
 MIN_VOL = 50_000
 PAGE = 1000          # v2 /trades max; v1 (offset paging) was retired 2026-10-24

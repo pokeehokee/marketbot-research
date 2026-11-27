@@ -1,0 +1,44 @@
+KXBTCD: category Crypto, fee_type quadratic
+KXBTCD: 120412 settled markets, 0 without a yes/no result (skipped)
+20053 sampled markets to read
+500 markets read in 3.7 min, 0 failed
+1000 markets read in 6.8 min, 0 failed
+1500 markets read in 9.9 min, 0 failed
+2000 markets read in 13.4 min, 0 failed
+2500 markets read in 16.5 min, 0 failed
+3000 markets read in 19.6 min, 0 failed
+3500 markets read in 22.6 min, 0 failed
+4000 markets read in 25.9 min, 0 failed
+4500 markets read in 29.1 min, 0 failed
+5000 markets read in 32.3 min, 0 failed
+5500 markets read in 35.7 min, 0 failed
+6000 markets read in 38.9 min, 0 failed
+6500 markets read in 42.1 min, 0 failed
+7000 markets read in 45.3 min, 0 failed
+7500 markets read in 48.5 min, 0 failed
+8000 markets read in 51.7 min, 0 failed
+8500 markets read in 54.8 min, 0 failed
+9000 markets read in 58.1 min, 0 failed
+9500 markets read in 61.2 min, 0 failed
+10000 markets read in 64.4 min, 0 failed
+10500 markets read in 67.6 min, 0 failed
+11000 markets read in 70.7 min, 0 failed
+11500 markets read in 74.0 min, 0 failed
+12000 markets read in 77.1 min, 0 failed
+12500 markets read in 80.2 min, 0 failed
+13000 markets read in 83.4 min, 0 failed
+13500 markets read in 86.4 min, 0 failed
+14000 markets read in 89.5 min, 0 failed
+14500 markets read in 92.6 min, 0 failed
+15000 markets read in 96.0 min, 0 failed
+15500 markets read in 99.0 min, 0 failed
+16000 markets read in 102.1 min, 0 failed
+16500 markets read in 105.3 min, 0 failed
+17000 markets read in 108.4 min, 0 failed
+17500 markets read in 111.6 min, 0 failed
+18000 markets read in 114.7 min, 0 failed
+18500 markets read in 117.6 min, 0 failed
+19000 markets read in 120.8 min, 0 failed
+19500 markets read in 124.1 min, 0 failed
+20000 markets read in 127.1 min, 0 failed
+done this run: 20053 read, 0 failed (retried on resume), 0 still unread

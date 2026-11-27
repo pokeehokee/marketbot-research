@@ -1,73 +1,70 @@
-KXBTC15M: category Crypto, fee_type quadratic
-KXETH15M: category Crypto, fee_type quadratic
-KXSOL15M: category Crypto, fee_type quadratic
-KXETHD: category Crypto, fee_type quadratic
 KXBTC15M: 2657 settled markets, 0 without a yes/no result (skipped)
 KXETH15M: 2657 settled markets, 0 without a yes/no result (skipped)
 KXSOL15M: 2657 settled markets, 0 without a yes/no result (skipped)
 KXETHD: 189860 settled markets, 0 without a yes/no result (skipped)
-197831 sampled markets to read
-500 markets read in 5.5 min, 0 failed
-1000 markets read in 11.4 min, 0 failed
-1500 markets read in 15.6 min, 0 failed
-2000 markets read in 21.4 min, 0 failed
-2500 markets read in 27.0 min, 0 failed
-3000 markets read in 31.9 min, 0 failed
-3500 markets read in 36.9 min, 0 failed
-4000 markets read in 41.0 min, 0 failed
-4500 markets read in 45.8 min, 0 failed
-5000 markets read in 49.8 min, 0 failed
-5500 markets read in 54.1 min, 0 failed
-6000 markets read in 59.0 min, 0 failed
-6500 markets read in 62.9 min, 0 failed
-7000 markets read in 68.3 min, 0 failed
-7500 markets read in 72.5 min, 0 failed
-8000 markets read in 78.2 min, 0 failed
-/markets/trades KXETHD-26NOV2422-T1019.99: HTTP 429
-8500 markets read in 84.5 min, 1 failed
-9000 markets read in 89.1 min, 1 failed
-9500 markets read in 95.6 min, 1 failed
-10000 markets read in 99.7 min, 1 failed
-10500 markets read in 105.0 min, 1 failed
-11000 markets read in 108.9 min, 1 failed
-11500 markets read in 114.2 min, 1 failed
-12000 markets read in 118.9 min, 1 failed
-12500 markets read in 122.7 min, 1 failed
-13000 markets read in 127.6 min, 1 failed
-13500 markets read in 131.9 min, 1 failed
-14000 markets read in 136.9 min, 1 failed
-14500 markets read in 142.0 min, 1 failed
-15000 markets read in 146.3 min, 1 failed
-15500 markets read in 151.9 min, 1 failed
-16000 markets read in 156.0 min, 1 failed
-16500 markets read in 161.2 min, 1 failed
-17000 markets read in 167.8 min, 1 failed
-17500 markets read in 172.5 min, 1 failed
-18000 markets read in 177.8 min, 1 failed
-18500 markets read in 181.8 min, 1 failed
-19000 markets read in 187.1 min, 1 failed
-19500 markets read in 191.7 min, 1 failed
-20000 markets read in 195.3 min, 1 failed
-20500 markets read in 199.6 min, 1 failed
-21000 markets read in 203.6 min, 1 failed
-21500 markets read in 208.7 min, 1 failed
-22000 markets read in 214.2 min, 1 failed
-22500 markets read in 218.4 min, 1 failed
-23000 markets read in 223.7 min, 1 failed
-23500 markets read in 228.2 min, 1 failed
-24000 markets read in 234.7 min, 1 failed
-24500 markets read in 239.0 min, 1 failed
-25000 markets read in 244.7 min, 1 failed
-25500 markets read in 249.5 min, 1 failed
-26000 markets read in 253.4 min, 1 failed
-26500 markets read in 258.8 min, 1 failed
-27000 markets read in 262.8 min, 1 failed
-27500 markets read in 267.0 min, 1 failed
-28000 markets read in 271.5 min, 1 failed
-28500 markets read in 275.7 min, 1 failed
-29000 markets read in 280.8 min, 1 failed
-29500 markets read in 284.8 min, 1 failed
-30000 markets read in 290.2 min, 1 failed
-30500 markets read in 296.2 min, 1 failed
+167576 sampled markets to read
+500 markets read in 6.5 min, 0 failed
+1000 markets read in 13.4 min, 0 failed
+1500 markets read in 17.5 min, 0 failed
+2000 markets read in 22.8 min, 0 failed
+2500 markets read in 28.3 min, 0 failed
+3000 markets read in 32.6 min, 0 failed
+3500 markets read in 37.2 min, 0 failed
+4000 markets read in 40.9 min, 0 failed
+4500 markets read in 45.4 min, 0 failed
+5000 markets read in 50.0 min, 0 failed
+5500 markets read in 54.8 min, 0 failed
+6000 markets read in 60.3 min, 0 failed
+6500 markets read in 65.7 min, 0 failed
+7000 markets read in 70.2 min, 0 failed
+7500 markets read in 76.0 min, 0 failed
+8000 markets read in 80.1 min, 0 failed
+8500 markets read in 86.4 min, 0 failed
+9000 markets read in 90.8 min, 0 failed
+9500 markets read in 96.3 min, 0 failed
+10000 markets read in 101.3 min, 0 failed
+10500 markets read in 105.7 min, 0 failed
+11000 markets read in 110.1 min, 0 failed
+11500 markets read in 113.7 min, 0 failed
+12000 markets read in 118.0 min, 0 failed
+12500 markets read in 123.0 min, 0 failed
+13000 markets read in 127.6 min, 0 failed
+13500 markets read in 132.7 min, 0 failed
+14000 markets read in 137.1 min, 0 failed
+14500 markets read in 143.4 min, 0 failed
+15000 markets read in 149.1 min, 0 failed
+15500 markets read in 154.6 min, 0 failed
+16000 markets read in 159.5 min, 0 failed
+/markets/trades KXBTC15M-26NOV191315-15: HTTP 504
+/markets/trades KXBTC15M-26NOV191300-00: HTTP 504
+/markets/trades KXBTC15M-26NOV191345-45: HTTP 504
+16500 markets read in 165.4 min, 3 failed
+17000 markets read in 170.7 min, 3 failed
+17500 markets read in 174.5 min, 3 failed
+18000 markets read in 179.9 min, 3 failed
+18500 markets read in 184.2 min, 3 failed
+19000 markets read in 190.1 min, 3 failed
+19500 markets read in 195.6 min, 3 failed
+20000 markets read in 199.6 min, 3 failed
+20500 markets read in 205.2 min, 3 failed
+21000 markets read in 210.5 min, 3 failed
+21500 markets read in 215.9 min, 3 failed
+22000 markets read in 220.8 min, 3 failed
+22500 markets read in 224.8 min, 3 failed
+23000 markets read in 229.6 min, 3 failed
+23500 markets read in 233.6 min, 3 failed
+24000 markets read in 238.9 min, 3 failed
+24500 markets read in 243.8 min, 3 failed
+25000 markets read in 247.4 min, 3 failed
+25500 markets read in 251.7 min, 3 failed
+26000 markets read in 256.0 min, 3 failed
+26500 markets read in 261.5 min, 3 failed
+27000 markets read in 266.3 min, 3 failed
+27500 markets read in 270.5 min, 3 failed
+28000 markets read in 275.8 min, 3 failed
+28500 markets read in 280.4 min, 3 failed
+29000 markets read in 286.9 min, 3 failed
+29500 markets read in 290.8 min, 3 failed
+30000 markets read in 295.7 min, 3 failed
 budget reached; stopping (a re-run resumes here)
-done this run: 30903 read, 1 failed (retried on resume), 166928 still unread
+done this run: 30474 read, 3 failed (retried on resume), 137102 still unread

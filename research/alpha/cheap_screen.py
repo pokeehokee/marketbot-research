@@ -49,6 +49,9 @@ TAPE_NUM = ("age", "dq5", "dq15", "dq60", "flowc15", "flowc60", "vol15", "vol60"
 TAPE_CAT = ("last_cheap", "cheap_yes")
 NEWS_NUM = ("age_h", "dq1h", "dq6h", "dq24h", "vol24", "n24", "rng24")
 NEWS_CAT = ("jump24", "cheap_yes")
+COMBO_NUM = ("n_legs", "n_games", "same_game_pairs", "gap", "d_indep60", "ttc_first_h",
+             "ttc_last_h", "size", "hour_et", "leg_age_max_m")
+COMBO_CAT = ("cat_mix", "has_same_game")
 CONTROLS = ("ctl_leak", "ctl_noise")
 
 
@@ -123,13 +126,29 @@ def news_row(r):
             "off": int(r["offset_h"]), "day": r["day"], "q": q, "won": won, "f": f}
 
 
+def combo_row(r):
+    """A combo buy (combo_buy.py export): the price is the RFQ fill the buyer really paid."""
+    q, won = fnum(r["q"]), int(r["won"])
+    if q is None or not (0 < q <= CHEAP_MAX):
+        return None
+    f = {k: fnum(r.get(k)) for k in COMBO_NUM}
+    f["cat_mix"] = r.get("cat_mix") or None
+    v = fnum(r.get("has_same_game"))
+    f["has_same_game"] = None if v is None else int(v)
+    f["last_cheap"] = 1          # every row is a fill at the price paid, so the holdout's ask check is the cell
+    return {"source": "combo", "g": "all", "category": r.get("category") or "", "series": r["series"],
+            "event": r["event"], "ticker": r["ticker"], "off": 0, "day": r["day"], "q": q,
+            "won": won, "f": f}
+
+
 def iter_rows(paths):
     for p in paths:
         with gzip.open(p, "rt") as fh:
             rd = csv.DictReader(fh)
-            news = "q" in (rd.fieldnames or [])
+            cols = rd.fieldnames or []
+            fn = combo_row if "n_legs" in cols else (news_row if "q" in cols else tape_row)
             for r in rd:
-                x = news_row(r) if news else tape_row(r)
+                x = fn(r)
                 if x:
                     yield x
 
@@ -181,11 +200,11 @@ def apply_cal(rows, cal):
 
 
 def numfeats(src):
-    return (TAPE_NUM if src == "tape" else NEWS_NUM) + CONTROLS
+    return {"tape": TAPE_NUM, "news": NEWS_NUM, "combo": COMBO_NUM}[src] + CONTROLS
 
 
 def catfeats(src):
-    return TAPE_CAT if src == "tape" else NEWS_CAT
+    return {"tape": TAPE_CAT, "news": NEWS_CAT, "combo": COMBO_CAT}[src]
 
 
 def quint(vals):

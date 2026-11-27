@@ -1,0 +1,4 @@
+# Editing this file on main dispatches the combo buy-side pull (.github/workflows/alpha-combo.yml).
+days=30
+budget=300
+tag=combo-buy-1

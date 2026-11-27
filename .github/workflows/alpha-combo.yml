@@ -1,0 +1,110 @@
+name: Alpha combo buy side (public research repo)
+
+# Combos (parlays) bought at 15c or less: does anything known at the buy (correlated legs,
+# leg count, the legs' own prices and how they moved, time to the first leg) make them hit
+# more often than their price says? research/alpha/combo_buy.py pulls; cheap_screen.py scores
+# with the same sealed-holdout method as the other cheap-contract screens. Read-only and
+# unauthenticated: no secret is referenced in this file. Shards resume from cached databases.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/alpha/COMBOBUY"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: alpha-combo
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read parameters
+        id: p
+        run: grep -E '^(days|budget|tag)=' research/alpha/COMBOBUY >> "$GITHUB_OUTPUT"
+      - name: Restore this shard's database (resume)
+        uses: actions/cache/restore@v4
+        with:
+          path: research/alpha/combo_${{ steps.p.outputs.tag }}_${{ matrix.shard }}.db
+          key: combo-${{ steps.p.outputs.tag }}-${{ matrix.shard }}-${{ github.run_id }}
+          restore-keys: combo-${{ steps.p.outputs.tag }}-${{ matrix.shard }}-
+      - name: Tests
+        run: python3 -m unittest discover -s research/alpha -p 'test_*.py'
+      - name: Read combos and their legs
+        run: |
+          set -o pipefail
+          mkdir -p research/alpha/out/combo
+          timeout $(( ${{ steps.p.outputs.budget }} * 60 + 900 )) \
+            python3 -I research/alpha/combo_buy.py --tag ${{ steps.p.outputs.tag }} --shard ${{ matrix.shard }}/3 \
+              --days ${{ steps.p.outputs.days }} --budget-min ${{ steps.p.outputs.budget }} \
+            | tee research/alpha/out/combo/${{ steps.p.outputs.tag }}-${{ matrix.shard }}.log
+      - name: Export
+        if: always()
+        run: |
+          python3 -I research/alpha/combo_buy.py --tag ${{ steps.p.outputs.tag }} --shard ${{ matrix.shard }}/3 \
+            --days ${{ steps.p.outputs.days }} \
+            --export research/alpha/out/combo/${{ steps.p.outputs.tag }}-${{ matrix.shard }}.csv.gz
+      - name: Save this shard's database
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: research/alpha/combo_${{ steps.p.outputs.tag }}_${{ matrix.shard }}.db
+          key: combo-${{ steps.p.outputs.tag }}-${{ matrix.shard }}-${{ github.run_id }}
+      - name: Commit this shard's rows
+        if: always()
+        run: |
+          git config user.name "alpha-combo"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/alpha/out
+          git commit -m "alpha combo buys: ${{ steps.p.outputs.tag }} shard ${{ matrix.shard }}" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep $((i * 7)); done
+
+  score:
+    needs: pull
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Read parameters
+        id: p
+        run: grep -E '^(tag)=' research/alpha/COMBOBUY >> "$GITHUB_OUTPUT"
+      - name: Train, then holdout, once every shard is read
+        run: |
+          git config user.name "alpha-combo"
+          git config user.email "actions@users.noreply.github.com"
+          git pull origin "${GITHUB_REF_NAME}"
+          t=${{ steps.p.outputs.tag }}; o=research/alpha/out
+          unread=$(cat $o/combo/$t-*-coverage.txt | awk '$1 == "unread" {s += $2} END {print s+0}')
+          shards=$(ls $o/combo/$t-*-coverage.txt | wc -l)
+          echo "unread $unread across $shards shards"
+          if [ "$unread" != "0" ] || [ "$shards" -lt 3 ]; then
+            echo "Not complete ($unread hours unread, $shards shards); re-dispatch to resume." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          cat $o/combo/$t-*-coverage.txt >> "$GITHUB_STEP_SUMMARY"
+          if [ ! -f $o/$t-selected.json ]; then
+            python3 -I research/alpha/cheap_screen.py --phase train --tag $t $o/combo/$t-*.csv.gz
+            cat $o/$t-train.txt >> "$GITHUB_STEP_SUMMARY"
+            git add $o
+            git commit -m "alpha combo train selection: $t (holdout sealed)"
+            for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep $((i * 7)); done
+          fi
+          if [ ! -f $o/$t-holdout.txt ]; then
+            python3 -I research/alpha/cheap_screen.py --phase holdout --tag $t $o/combo/$t-*.csv.gz
+            cat $o/$t-holdout.txt >> "$GITHUB_STEP_SUMMARY"
+            git add $o
+            git commit -m "alpha combo holdout: $t" || exit 0
+            for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep $((i * 7)); done
+          fi

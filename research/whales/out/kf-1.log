@@ -1,0 +1,60 @@
+KXBTC15M: 5700 settled markets, 0 unresolved
+KXETH15M: 5700 settled markets, 0 unresolved
+KXSOL15M: 5700 settled markets, 0 unresolved
+semantics check: ticker=KXBTC15M-26NOV280000-00; title=BTC price up in next 15 mins?; yes_sub_title=Target price: TBD; strike_type=None; floor_strike=None; open_time=2026-11-28T04:45:00Z; close_time=2026-11-28T05:00:00Z
+3875 events; 2524 windows needed, 2524 to read
+/markets/trades KXETH15M-26OCT081430-30: HTTP 429
+/markets/trades KXBTC15M-26OCT151500-00: HTTP 429
+500 windows read
+/markets/trades KXBTC15M-26OCT260030-30: HTTP 429
+/markets/trades KXBTC15M-26OCT261445-45: HTTP 429
+/markets/trades KXETH15M-26OCT291800-00: HTTP 429
+/markets/trades KXBTC15M-26OCT291730-30: HTTP 429
+/markets/trades KXBTC15M-26OCT292015-15: HTTP 429
+/markets/trades KXBTC15M-26OCT301730-30: HTTP 429
+/markets/trades KXBTC15M-26OCT301645-45: HTTP 429
+/markets/trades KXETH15M-26NOV031845-45: HTTP 429
+1000 windows read
+/markets/trades KXBTC15M-26NOV060045-45: HTTP 429
+/markets/trades KXBTC15M-26NOV060530-30: HTTP 429
+/markets/trades KXBTC15M-26NOV060945-45: HTTP 429
+/markets/trades KXETH15M-26NOV100900-00: HTTP 429
+/markets/trades KXBTC15M-26NOV101945-45: HTTP 429
+/markets/trades KXBTC15M-26NOV101615-15: HTTP 429
+/markets/trades KXETH15M-26NOV111345-45: HTTP 429
+/markets/trades KXBTC15M-26NOV141045-45: HTTP 429
+/markets/trades KXBTC15M-26NOV141500-00: HTTP 504
+/markets/trades KXBTC15M-26NOV141430-30: HTTP 504
+/markets/trades KXBTC15M-26NOV160945-45: HTTP 429
+/markets/trades KXBTC15M-26NOV161715-15: HTTP 429
+/markets/trades KXBTC15M-26NOV172330-30: HTTP 429
+1500 windows read
+/markets/trades KXBTC15M-26NOV191915-15: HTTP 429
+/markets/trades KXBTC15M-26NOV200445-45: HTTP 429
+/markets/trades KXBTC15M-26NOV201200-00: HTTP 429
+/markets/trades KXBTC15M-26NOV201300-00: HTTP 429
+/markets/trades KXBTC15M-26NOV202215-15: HTTP 429
+/markets/trades KXBTC15M-26NOV212000-00: HTTP 429
+/markets/trades KXBTC15M-26NOV211915-15: HTTP 429
+/markets/trades KXBTC15M-26NOV211945-45: HTTP 429
+/markets/trades KXBTC15M-26NOV221600-00: HTTP 429
+/markets/trades KXBTC15M-26NOV221815-15: HTTP 429
+/markets/trades KXBTC15M-26NOV222300-00: HTTP 429
+/markets/trades KXBTC15M-26NOV230745-45: HTTP 429
+/markets/trades KXETH15M-26NOV230900-00: HTTP 429
+/markets/trades KXBTC15M-26NOV230815-15: HTTP 429
+/markets/trades KXBTC15M-26NOV231245-45: HTTP 429
+/markets/trades KXBTC15M-26NOV231545-45: HTTP 429
+/markets/trades KXETH15M-26NOV231815-15: HTTP 429
+2000 windows read
+/markets/trades KXBTC15M-26NOV241230-30: HTTP 429
+/markets/trades KXBTC15M-26NOV242230-30: HTTP 429
+/markets/trades KXETH15M-26NOV250700-00: HTTP 429
+/markets/trades KXBTC15M-26NOV251730-30: HTTP 429
+/markets/trades KXBTC15M-26NOV252015-15: HTTP 429
+/markets/trades KXBTC15M-26NOV260115-15: HTTP 429
+/markets/trades KXETH15M-26NOV261630-30: HTTP 429
+/markets/trades KXBTC15M-26NOV261815-15: HTTP 429
+/markets/trades KXBTC15M-26NOV262030-30: HTTP 429
+/markets/trades KXETH15M-26NOV262130-30: HTTP 429
+done this run: 2474 read, 50 unread

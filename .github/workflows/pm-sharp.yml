@@ -75,10 +75,12 @@ jobs:
       - name: Score
         run: |
           mkdir -p research/whales/out
-          cp dl/research/whales/out/* research/whales/out/ 2>/dev/null || true
+          # upload-artifact strips the common prefix (research/whales/), so find the files wherever they land
+          find dl -type f | sed 's/^/artifact: /'
+          find dl -name 'pm-*' -path '*out*' -exec cp {} research/whales/out/ \;
           cat research/whales/out/pm-${{ inputs.tag }}-*-coverage.txt || true
           python3 -I research/whales/pm_sharp.py --tag "${{ inputs.tag }}" \
-            --score 'dl/research/whales/pm_${{ inputs.tag }}_*.db' \
+            --score "$(dirname "$(find dl -name 'pm_${{ inputs.tag }}_*.db' | head -1)")/pm_${{ inputs.tag }}_*.db" \
             | tee research/whales/out/pm-${{ inputs.tag }}-score.txt
       - name: Commit
         if: always()

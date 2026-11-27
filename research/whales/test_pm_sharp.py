@@ -31,6 +31,42 @@ class TestPmSharp(unittest.TestCase):
         self.assertEqual(p.page_of({"data": [], "pagination": {"next_cursor": None, "has_more": False}}), ([], None))
         self.assertEqual(p.page_of([{"a": 1}]), ([{"a": 1}], None))
 
+    def test_parse_trade(self):
+        x = {"proxy_wallet": "0xAB", "side": "SELL", "outcome_index": 1, "price": "0.4", "size": "5",
+             "timestamp": 100}
+        self.assertEqual(p.parse_trade(x), ("0xab", 0, 1, 0.4, 5.0, 100))
+        self.assertIsNone(p.parse_trade(dict(x, outcome_index=999)))
+        self.assertIsNone(p.parse_trade(dict(x, side="MERGE")))
+
+    def test_score_end_to_end_on_the_compact_schema(self):
+        """A wallet right on 20 train markets is found sharp and followed in holdout; a capped
+        holdout market is excluded from the follow."""
+        import tempfile, sqlite3
+        d = tempfile.mkdtemp()
+        c = p.db(os.path.join(d, "pm_t_0.db"))
+        day = 86400
+        for i in range(30):
+            cid, end = f"c{i}", (i + 1) * day
+            c.execute("INSERT INTO mkt(cid, q, end_ts, win, vol, done, capped) VALUES (?,?,?,?,?,1,?)",
+                      (cid, "", end, 0, 1e5, 1 if i == 29 else 0))
+            m = c.execute("SELECT rowid FROM mkt WHERE cid=?", (cid,)).fetchone()[0]
+            t0 = end - day // 2
+            base = 0.40 + (i % 5) * 0.01
+            rows = [(m, p.wid(c, "0xsharp"), 1, 0, base, 100, t0),
+                    (m, p.wid(c, "0xdumb"), 1, 1, 1 - base, 100, t0 + 1),
+                    (m, p.wid(c, "0xtape"), 1, 0, base + 0.05, 10, t0 + 120)][: 3 if i >= 18 else 2]
+            c.executemany("INSERT INTO tr VALUES (?,?,?,?,?,?,?)", rows)
+        c.commit()
+        out = []
+        p._WID.clear()
+        p.score(type("A", (), {"score": os.path.join(d, "pm_t_*.db")}), log=out.append)
+        text = "\n".join(out)
+        self.assertIn("sharp 1", text)
+        self.assertIn("1 capped", text)
+        line = next(l for l in out if l.strip().startswith("sharp:"))
+        self.assertIn("win 100.0%", line)
+        self.assertIn("days=11", line)   # 12 holdout markets, the capped one excluded
+
     def test_read_only(self):
         with self.assertRaises(RuntimeError):
             p.get("https://clob.polymarket.com/order")

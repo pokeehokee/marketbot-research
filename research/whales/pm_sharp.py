@@ -35,6 +35,7 @@ START, END = "2026-07-01", "2026-11-20"
 MIN_VOL = 50_000
 PAGE = 1000          # v2 /trades max; v1 (offset paging) was retired 2026-10-24
 MAX_PAGES = 8
+MIN_PRINT = 1.0     # dollars; dust prints are dropped to keep the database cacheable
 MIN_MKTS, MIN_EDGE = 15, 0.05
 DELAYS = (60, 300)
 WAIT = 3600
@@ -105,15 +106,31 @@ def value(side, price, size, paid):
 
 
 def db(path):
+    """Compact schema: 65k markets x thousands of prints would not fit a runner's cache as text,
+    so wallets are interned to integers, the market is its mkt rowid, dust prints (< $1) are
+    dropped and there is no transaction hash. A market interrupted mid-read is re-read whole
+    (its rows are deleted first), so no key is needed to stop duplicates."""
     c = sqlite3.connect(path)
     c.executescript("""
     CREATE TABLE IF NOT EXISTS mkt(cid TEXT PRIMARY KEY, q TEXT, end_ts INTEGER, win INTEGER,
         vol REAL, cat TEXT, done INTEGER DEFAULT 0, trades INTEGER, capped INTEGER);
-    CREATE TABLE IF NOT EXISTS tr(cid TEXT, wallet TEXT, side TEXT, oi INTEGER, price REAL,
-        size REAL, ts INTEGER, tx TEXT, PRIMARY KEY(cid, tx, wallet, oi, side, price, size));
+    CREATE TABLE IF NOT EXISTS w(id INTEGER PRIMARY KEY, addr TEXT UNIQUE);
+    CREATE TABLE IF NOT EXISTS tr(m INTEGER, w INTEGER, buy INTEGER, oi INTEGER, price REAL,
+        size REAL, ts INTEGER);
+    CREATE INDEX IF NOT EXISTS tr_m ON tr(m);
     CREATE TABLE IF NOT EXISTS meta(k TEXT PRIMARY KEY, v TEXT);
     """)
     return c
+
+
+_WID = {}
+
+
+def wid(c, addr):
+    if addr not in _WID:
+        c.execute("INSERT OR IGNORE INTO w(addr) VALUES (?)", (addr,))
+        _WID[addr] = c.execute("SELECT id FROM w WHERE addr=?", (addr,)).fetchone()[0]
+    return _WID[addr]
 
 
 def list_markets(c, shard, nshards, log):
@@ -176,6 +193,8 @@ def hash_(s):
 
 
 def pull(c, cid, log, first=False):
+    m = c.execute("SELECT rowid FROM mkt WHERE cid=?", (cid,)).fetchone()[0]
+    c.execute("DELETE FROM tr WHERE m=?", (m,))
     n, capped, cursor = 0, 0, None
     for pg in range(MAX_PAGES):
         params = {"condition": cid, "taker_only": "true"}
@@ -189,17 +208,14 @@ def pull(c, cid, log, first=False):
                 f"first trade: {json.dumps(page[0])[:600] if page else None}")
         rows = []
         for x in page:
-            oi = x.get("outcome_index", x.get("outcomeIndex"))
-            try:
-                oi = int(oi)
-                if oi not in (0, 1):
-                    continue
-                rows.append((cid, (x.get("proxy_wallet") or x.get("proxyWallet") or "").lower(), x.get("side"), oi,
-                             float(x.get("price")), float(x.get("size")), int(x.get("timestamp")),
-                             x.get("transaction_hash") or x.get("transactionHash") or ""))
-            except (TypeError, ValueError):
+            r1 = parse_trade(x)
+            if r1 is None:
                 continue
-        c.executemany("INSERT OR IGNORE INTO tr VALUES (?,?,?,?,?,?,?,?)", rows)
+            addr, buy, oi, p, sz, t = r1
+            if p * sz < MIN_PRINT:
+                continue
+            rows.append((m, wid(c, addr), buy, oi, p, sz, t))
+        c.executemany("INSERT INTO tr VALUES (?,?,?,?,?,?,?)", rows)
         n += len(rows)
         if not cursor:
             break
@@ -208,6 +224,19 @@ def pull(c, cid, log, first=False):
     c.execute("UPDATE mkt SET done=1, trades=?, capped=? WHERE cid=?", (n, capped, cid))
     c.commit()
     return n
+
+
+def parse_trade(x):
+    """(wallet, buy 1/0, outcome index 0/1, price, size, ts) or None. 999 = unlabeled outcome."""
+    try:
+        oi = int(x.get("outcome_index", x.get("outcomeIndex")))
+        side = x.get("side")
+        if oi not in (0, 1) or side not in ("BUY", "SELL"):
+            return None
+        return ((x.get("proxy_wallet") or x.get("proxyWallet") or "").lower(), 1 if side == "BUY" else 0,
+                oi, float(x.get("price")), float(x.get("size")), int(x.get("timestamp")))
+    except (TypeError, ValueError):
+        return None
 
 
 def page_of(r):
@@ -222,7 +251,7 @@ def page_of(r):
     return rows, nxt
 
 
-def run(a, log=print):
+def run(a, log=lambda *x: print(time.strftime('%H:%M:%S'), *x, flush=True)):
     shard, nshards = map(int, a.shard.split("/"))
     c = db(os.path.join(HERE, f"pm_{a.tag}_{shard}.db"))
     deadline = time.time() + a.budget_min * 60
@@ -322,36 +351,66 @@ def summary(name, d):
             f"win {win:.1%} avg price {avgp:.3f} multiple {win / avgp:.2f} per $1 {m / avgp:+.3f}")
 
 
-def score(a, log=print):
-    win_of, end_of, trades = {}, {}, []
-    for p in sorted(glob.glob(a.score)):
+def score(a, log=lambda *x: print(*x, flush=True)):
+    """Reads each shard database without loading every print: skill is aggregated in SQL per
+    (wallet, market), and the follow test reads one holdout market at a time. Markets whose
+    read hit MAX_PAGES are excluded from the FOLLOW test, because only their newest prints were
+    kept and a wallet's 'first' trade there is not its first; they still count toward skill."""
+    files = sorted(glob.glob(a.score))
+    win_of, end_of, capped = {}, {}, set()
+    for fi, p in enumerate(files):
         c = sqlite3.connect(p)
-        for cid, end, w in c.execute("SELECT cid, end_ts, win FROM mkt WHERE done=1"):
-            win_of[cid], end_of[cid] = w, end
-        trades += c.execute("SELECT cid, wallet, side, oi, price, size, ts FROM tr").fetchall()
+        for rid, end, w, cp in c.execute("SELECT rowid, end_ts, win, capped FROM mkt WHERE done=1"):
+            win_of[(fi, rid)], end_of[(fi, rid)] = w, end
+            if cp:
+                capped.add((fi, rid))
     days = sorted({e // 86400 for e in end_of.values()})
     if len(days) < 10:
         log("too few resolution days to split")
         return
     cut = days[int(len(days) * TRAIN_FRAC)] * 86400
     cut_mid = days[int(len(days) * TRAIN_FRAC / 2)] * 86400
-    tr_train = [r for r in trades if end_of.get(r[0], cut) < cut]
-    hold = defaultdict(list)
-    for r in trades:
-        if r[0] in end_of and end_of[r[0]] >= cut:
-            hold[r[0]].append(r)
+    # skill on train markets, aggregated in SQL
+    w = defaultdict(dict)
+    ntr = 0
+    for fi, p in enumerate(files):
+        c = sqlite3.connect(p)
+        q = """SELECT t.m, a.addr,
+                 SUM(CASE t.buy WHEN 1 THEN t.size * ((t.oi = k.win) - t.price)
+                                ELSE t.size * (t.price - (t.oi = k.win)) END),
+                 SUM(CASE t.buy WHEN 1 THEN t.size * t.price ELSE t.size * (1 - t.price) END),
+                 COUNT(*)
+               FROM tr t JOIN mkt k ON k.rowid = t.m JOIN w a ON a.id = t.w
+               WHERE k.done = 1 AND k.end_ts < ? GROUP BY t.m, t.w"""
+        for m, addr, v, cost, n in c.execute(q, (cut,)):
+            w[addr][(fi, m)] = [v, cost]
+            ntr += n
     log(f"markets {len(end_of)} (train {sum(e < cut for e in end_of.values())}, holdout "
-        f"{sum(e >= cut for e in end_of.values())}); trades {len(trades)}; cut "
+        f"{sum(e >= cut for e in end_of.values())}, {len(capped)} capped); train prints {ntr}; cut "
         f"{time.strftime('%Y-%m-%d', time.gmtime(cut))}")
-    w = skill(tr_train, win_of)
     sharp, active = sharp_set(w, end_of, cut_mid)
     log(f"wallets with >= {MIN_MKTS} train markets: {len(sharp) + len(active)}; sharp {len(sharp)}")
+    res = {(g, d): defaultdict(list) for g in ("sharp", "control") for d in DELAYS}
+    nh = 0
+    for fi, p in enumerate(files):
+        c = sqlite3.connect(p)
+        hold = [m for (f2, m), e in end_of.items() if f2 == fi and e >= cut and (fi, m) not in capped]
+        for m in hold:
+            rows = [((fi, m), addr, "BUY" if b else "SELL", oi, pr, sz, t) for addr, b, oi, pr, sz, t in c.execute(
+                "SELECT a.addr, t.buy, t.oi, t.price, t.size, t.ts FROM tr t JOIN w a ON a.id = t.w "
+                "WHERE t.m = ? ORDER BY t.ts", (m,))]
+            nh += len(rows)
+            one = {(fi, m): rows}
+            for d in DELAYS:
+                for g, grp in (("sharp", sharp), ("control", active)):
+                    for k, v in follow(one, grp, win_of, end_of, d).items():
+                        res[(g, d)][k] += v
+    log(f"holdout prints read {nh}")
     for d in DELAYS:
         log(f"delay {d}s, hold to resolution, before fees:")
-        log(summary("sharp", follow(hold, sharp, win_of, end_of, d)))
-        log(summary("control (active, not sharp)", follow(hold, active, win_of, end_of, d)))
-    # price bands for the sharp group at the first delay
-    f0 = follow(hold, sharp, win_of, end_of, DELAYS[0])
+        log(summary("sharp", res[("sharp", d)]))
+        log(summary("control (active, not sharp)", res[("control", d)]))
+    f0 = res[("sharp", DELAYS[0])]
     for lo, hi in ((0.01, 0.2), (0.2, 0.5), (0.5, 0.8), (0.8, 0.99)):
         sub = {k: [x for x in v if lo <= x[1] < hi] for k, v in f0.items()}
         sub = {k: v for k, v in sub.items() if v}

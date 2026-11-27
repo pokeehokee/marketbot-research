@@ -26,7 +26,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [0, 1, 2]
+        shard: [0, 1, 2, 3, 4, 5]
     steps:
       - uses: actions/checkout@v4
       - name: Restore (resume)
@@ -43,7 +43,7 @@ jobs:
           mkdir -p research/whales/out
           timeout $(( ${{ inputs.budget }} * 60 + 600 )) \
             python3 -I research/whales/pm_sharp.py --tag "${{ inputs.tag }}" \
-              --shard ${{ matrix.shard }}/3 --budget-min ${{ inputs.budget }} \
+              --shard ${{ matrix.shard }}/6 --budget-min ${{ inputs.budget }} \
             | tee research/whales/out/pm-${{ inputs.tag }}-${{ matrix.shard }}.log
       - name: Save
         if: always()

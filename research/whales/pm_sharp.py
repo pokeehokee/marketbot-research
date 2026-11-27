@@ -256,7 +256,11 @@ def run(a, log=lambda *x: print(time.strftime('%H:%M:%S'), *x, flush=True)):
     c = db(os.path.join(HERE, f"pm_{a.tag}_{shard}.db"))
     deadline = time.time() + a.budget_min * 60
     list_markets(c, shard, nshards, log)
-    todo = [r[0] for r in c.execute("SELECT cid FROM mkt WHERE done=0 ORDER BY vol DESC")]
+    # Read in a fixed pseudo-random order (the tail of the condition id), NOT by volume: the
+    # smoke run read 157 of 162 top-volume markets capped at MAX_PAGES, and a capped market only
+    # keeps its newest prints, so it is useless to the follow test. A random order spreads the
+    # read budget across the volume range and stays resumable.
+    todo = [r[0] for r in c.execute("SELECT cid FROM mkt WHERE done=0 ORDER BY substr(cid, -6)")]
     log(f"markets to read {len(todo)}")
     first = c.execute("SELECT COUNT(*) FROM mkt WHERE done=1").fetchone()[0] == 0
     for i, cid in enumerate(todo):

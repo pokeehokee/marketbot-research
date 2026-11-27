@@ -1,0 +1,102 @@
+name: Alpha snap-back study (public research repo)
+
+# After a Kalshi market in a news-driven category moves 15c+ inside 30 minutes, does the
+# price keep going or snap back, and does either pay after fees? research/alpha/jumps.py
+# has the method. Read-only and unauthenticated: no secret is referenced in this file.
+# Shards resume from their cached databases; scoring runs only once every shard is read.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/alpha/JUMPS"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: alpha-jumps
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: politics
+            categories: "Politics,Elections,World"
+          - shard: other
+            categories: "Economics,Companies,Entertainment,Science and Technology,Health,Social,Transportation"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read parameters
+        id: p
+        run: grep -E '^(days|budget|tag)=' research/alpha/JUMPS >> "$GITHUB_OUTPUT"
+      - name: Restore this shard's database (resume)
+        uses: actions/cache/restore@v4
+        with:
+          path: research/alpha/jumps_${{ steps.p.outputs.tag }}-${{ matrix.shard }}.db
+          key: jumps-${{ steps.p.outputs.tag }}-${{ matrix.shard }}-${{ github.run_id }}
+          restore-keys: jumps-${{ steps.p.outputs.tag }}-${{ matrix.shard }}-
+      - name: Tests
+        run: python3 -m unittest discover -s research/alpha -p 'test_*.py'
+      - name: Read the tape
+        run: |
+          set -o pipefail
+          timeout $(( ${{ steps.p.outputs.budget }} * 60 + 900 )) \
+            python3 -I research/alpha/jumps.py --categories "${{ matrix.categories }}" \
+              --days ${{ steps.p.outputs.days }} --budget-min ${{ steps.p.outputs.budget }} \
+              --tag "${{ steps.p.outputs.tag }}-${{ matrix.shard }}" \
+            | tee research/alpha/out/${{ steps.p.outputs.tag }}-${{ matrix.shard }}.log
+      - name: Export
+        if: always()
+        run: |
+          python3 -I research/alpha/jumps.py --tag "${{ steps.p.outputs.tag }}-${{ matrix.shard }}" \
+            --export research/alpha/out/${{ steps.p.outputs.tag }}-${{ matrix.shard }}.csv.gz
+      - name: Save this shard's database
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: research/alpha/jumps_${{ steps.p.outputs.tag }}-${{ matrix.shard }}.db
+          key: jumps-${{ steps.p.outputs.tag }}-${{ matrix.shard }}-${{ github.run_id }}
+      - name: Commit this shard's jumps
+        if: always()
+        run: |
+          git config user.name "alpha-jumps"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/alpha/out
+          git commit -m "alpha jumps: ${{ steps.p.outputs.tag }} ${{ matrix.shard }}" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep $((i * 7)); done
+
+  score:
+    needs: pull
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Read parameters
+        id: p
+        run: grep -E '^(tag)=' research/alpha/JUMPS >> "$GITHUB_OUTPUT"
+      - name: Score once every shard is read
+        run: |
+          git config user.name "alpha-jumps"
+          git config user.email "actions@users.noreply.github.com"
+          git pull origin "${GITHUB_REF_NAME}"
+          t=${{ steps.p.outputs.tag }}
+          unread=$(cat research/alpha/out/$t-*-coverage.txt | awk '$1 == "unread_total" {s += $2} END {print s+0}')
+          shards=$(ls research/alpha/out/$t-*-coverage.txt | wc -l)
+          echo "unread $unread across $shards shards"
+          if [ "$unread" != "0" ] || [ "$shards" -lt 2 ]; then
+            echo "Not complete ($unread unread, $shards shards); re-dispatch to resume." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python3 -I research/alpha/score_jumps.py research/alpha/out/$t-*.csv.gz > research/alpha/out/$t-score.txt
+          head -60 research/alpha/out/$t-score.txt >> "$GITHUB_STEP_SUMMARY"
+          git add research/alpha/out
+          git commit -m "alpha jumps score: $t" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep $((i * 7)); done

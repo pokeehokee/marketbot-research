@@ -77,6 +77,28 @@ def entry(trades, te, side, wait=WAIT):
     return None
 
 
+MAKER_FEE = 0.0175   # Kalshi's maker rate where a series charges one; 0 where it does not
+
+
+def maker_fee(p, lot=LOT, rate=MAKER_FEE):
+    return math.ceil(rate * lot * p * (1 - p) * 100 - 1e-9) / 100.0 / lot
+
+
+def maker_fill(trades, t0, side, bid, wait=WAIT):
+    """Variant 2: a bid for `side` resting at `bid` from t0. Filled only when a LATER print
+    (t0 < ts <= t0 + wait) prices `side` strictly below the bid, i.e. trades through it.
+    A print AT the bid is not counted: the queue ahead of us may have absorbed it."""
+    for ts, s, p in trades:
+        if ts <= t0:
+            continue
+        if ts > t0 + wait:
+            return None
+        ours = p if s == side else 1.0 - p
+        if ours < bid - 1e-9:
+            return ts
+    return None
+
+
 def db(path):
     c = L.db(path)
     c.executescript("CREATE TABLE IF NOT EXISTS tr(ticker TEXT, ts REAL, side TEXT, price REAL)")
@@ -207,7 +229,7 @@ def bh(ps, q=0.10):
     return set(order[:k])
 
 
-def build(c, ev, sign=1, rnd=None):
+def build(c, ev, sign=1, rnd=None, maker=None, miss=None):
     trs = defaultdict(list)
     for tk, ts, s, p in c.execute("SELECT ticker, ts, side, price FROM tr ORDER BY ts"):
         trs[tk].append((ts, s, p))
@@ -228,6 +250,16 @@ def build(c, ev, sign=1, rnd=None):
             if not x:
                 continue
             y = 1 if res.get(m[1]) == side else 0
+            if maker is not None:
+                bid = round(x[1] - 0.01, 2)
+                tf = maker_fill(trs[m[1]], x[0], side, bid) if bid > 0 else None
+                if tf is None:
+                    if miss is not None:
+                        miss.append(dict(e, delay=dl))
+                    continue
+                f = maker_fee(bid, rate=maker)
+                out.append(dict(e, delay=dl, p=bid, fee=f, y=y, pnl=y - bid - f, left=m[0] - tf))
+                continue
             f = fee(x[1])
             out.append(dict(e, delay=dl, p=x[1], fee=f, y=y, pnl=y - x[1] - f, left=m[0] - x[0]))
     return out
@@ -245,12 +277,25 @@ HOLDOUT_FROM = "2026-11-03"   # the same split as whale_flow's scoring
 def score(a):
     c = db(os.path.join(HERE, f"kf_{a.tag}.db"))
     ev = load_events(sorted(glob.glob(a.score)))
-    rows = build(c, ev)
-    null = build(c, ev, rnd=random.Random(11))
     w = print
+    if a.maker is not None:
+        miss = []
+        rows = build(c, ev, maker=a.maker, miss=miss)
+        null = build(c, ev, rnd=random.Random(11), maker=a.maker)
+        w(f"VARIANT 2, MAKER: bid at the taker price - 1c, filled only on a trade-through within "
+          f"{WAIT} s; maker fee rate {a.maker}")
+        prim = lambda R: [r for r in R if FAM["entries"](r) and r["delay"] == 0]
+        for nm, lo_, hi_ in (("train", "", HOLDOUT_FROM), ("holdout", HOLDOUT_FROM, "9999")):
+            f_ = len(prim([r for r in rows if lo_ <= r["day"] < hi_]))
+            m_ = len(prim([r for r in miss if lo_ <= r["day"] < hi_]))
+            w(f"  fill rate, primary cell, {nm}: {f_} of {f_ + m_} = {f_ / max(1, f_ + m_):.0%}")
+    else:
+        rows = build(c, ev)
+        null = build(c, ev, rnd=random.Random(11))
     w(f"{len(rows)} entries priced from {len(ev)} events; holdout from {HOLDOUT_FROM}")
     w(f"median seconds left at entry {sorted(r['left'] for r in rows)[len(rows)//2] if rows else '-'}")
-    w("PRE-REGISTERED primary: entries, delay 0 (+5 s), all coins, taker, hold to settlement")
+    w("PRE-REGISTERED primary: entries, delay 0 (+5 s), all coins, "
+      f"{'maker' if a.maker is not None else 'taker'}, hold to settlement")
     for nm, R in (("train", [r for r in rows if r["day"] < HOLDOUT_FROM]),
                   ("holdout", [r for r in rows if r["day"] >= HOLDOUT_FROM])):
         w(f"  {nm:8s} {fmt(cell([r for r in R if FAM['entries'](r) and r['delay'] == 0]))}")
@@ -282,6 +327,7 @@ def main(argv=None):
     ap.add_argument("--events")
     ap.add_argument("--score")
     ap.add_argument("--budget-min", type=int, default=300)
+    ap.add_argument("--maker", type=float, help="score variant 2 at this maker fee rate")
     a = ap.parse_args(argv)
     score(a) if a.score else run(a)
 

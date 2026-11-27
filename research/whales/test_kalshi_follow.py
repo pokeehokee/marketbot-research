@@ -22,6 +22,18 @@ class TestKalshiFollow(unittest.TestCase):
         self.assertAlmostEqual(k.fee(.5), .018)
         self.assertAlmostEqual(k.fee(.95), .004)
 
+    def test_maker_fills_only_on_a_later_trade_through(self):
+        tr = [(100, "yes", .40), (110, "yes", .39), (120, "no", .61), (130, "no", .62)]
+        # bid .39 for yes: .39 at 110 is AT the bid (no fill); no at .61 -> yes .39 (at, no fill);
+        # no at .62 -> yes .38, through the bid -> filled at 130
+        self.assertEqual(k.maker_fill(tr, 100, "yes", .39), 130)
+        self.assertIsNone(k.maker_fill(tr, 100, "yes", .39, wait=20))
+        self.assertIsNone(k.maker_fill([(100, "no", .70)], 100, "yes", .39))  # not after t0
+
+    def test_maker_fee(self):
+        self.assertAlmostEqual(k.maker_fee(.5), .005)
+        self.assertEqual(k.maker_fee(.5, rate=0), 0)
+
     def test_read_only(self):
         with self.assertRaises(RuntimeError):
             k.T.assert_read_only("/portfolio/orders")

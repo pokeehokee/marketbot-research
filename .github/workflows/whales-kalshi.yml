@@ -54,6 +54,12 @@ jobs:
           python3 -I research/whales/kalshi_follow.py --tag "${{ inputs.tag }}" \
             --score 'research/whales/out/whales-1-[0-9].csv.gz' \
             > research/whales/out/kf-${{ inputs.tag }}-score.txt 2>&1 || true
+          for r in 0 0.0175; do
+            python3 -I research/whales/kalshi_follow.py --tag "${{ inputs.tag }}" --maker $r \
+              --score 'research/whales/out/whales-1-[0-9].csv.gz' \
+              > research/whales/out/kf-${{ inputs.tag }}-maker-$r.txt 2>&1 || true
+          done
+          cat research/whales/out/kf-${{ inputs.tag }}-maker-*.txt
       - name: Commit
         if: always()
         run: |

@@ -29,7 +29,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ALLOWED = {"gamma-api.polymarket.com": ("/markets",), "data-api.polymarket.com": ("/v2/trades",)}
+ALLOWED = {"gamma-api.polymarket.com": ("/markets",),   # /markets and /markets/keyset "data-api.polymarket.com": ("/v2/trades",)}
 START, END = "2026-07-01", "2026-11-20"
 MIN_VOL = 50_000
 PAGE = 1000          # v2 /trades max; v1 (offset paging) was retired 2026-10-24
@@ -58,7 +58,7 @@ def get(url, params=None):
         except urllib.error.HTTPError as e:
             if e.code in (429, 500, 502, 503, 504):
                 continue
-            if e.code in (400, 404):
+            if e.code in (400, 404, 410, 422):
                 return None
             raise
         except (urllib.error.URLError, TimeoutError):
@@ -118,11 +118,26 @@ def db(path):
 def list_markets(c, shard, nshards, log):
     if c.execute("SELECT v FROM meta WHERE k='listed'").fetchone():
         return
-    off, n, kept = 0, 0, 0
+    off, n, kept, cursor, mode, pages = 0, 0, 0, None, "keyset", 0
+    flt = {"closed": "true", "end_date_min": START + "T00:00:00Z", "end_date_max": END + "T23:59:59Z",
+           "volume_num_min": MIN_VOL, "limit": 100}
     while True:
-        page = get("https://gamma-api.polymarket.com/markets", {
-            "closed": "true", "end_date_min": START + "T00:00:00Z", "end_date_max": END + "T23:59:59Z",
-            "volume_num_min": MIN_VOL, "limit": 100, "offset": off, "order": "endDate", "ascending": "true"})
+        if mode == "keyset":
+            r = get("https://gamma-api.polymarket.com/markets/keyset",
+                    dict(flt, **({"after_cursor": cursor} if cursor else {})))
+            if r is None and pages == 0:
+                log("keyset listing refused; falling back to offset paging (capped by the server)")
+                mode = "offset"
+                continue
+            if isinstance(r, dict):
+                page = r.get("data") or r.get("markets") or r.get("results") or []
+                cursor = r.get("next_cursor")
+            else:
+                page, cursor = (r or []), None
+        else:
+            page = get("https://gamma-api.polymarket.com/markets",
+                       dict(flt, offset=off, order="endDate", ascending="true"))
+        pages += 1
         if not page:
             break
         if off == 0:
@@ -141,8 +156,12 @@ def list_markets(c, shard, nshards, log):
                       (cid, (m.get("question") or "")[:200], end, w, float(m.get("volumeNum") or 0), cat))
             kept += 1
         off += len(page)
-        if len(page) < 100:
+        if (mode == "keyset" and not cursor) or (mode == "offset" and len(page) < 100):
             break
+    log(f"listing: {pages} pages by {mode}")
+    if n == 0:
+        log("nothing listed; not marking the listing done, so a re-run tries again")
+        return
     c.execute("INSERT OR REPLACE INTO meta VALUES ('listed', ?)", (str(n),))
     c.commit()
     log(f"listed {n} closed markets >= ${MIN_VOL:,}; this shard kept {kept} resolved binaries")

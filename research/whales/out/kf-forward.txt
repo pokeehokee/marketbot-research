@@ -1,0 +1,7 @@
+FORWARD TEST from 2026-11-28: 0 whale events; verdict at >= 20 days and >= 300 entries per cell, interval 97.5%, both halves positive
+  taker (variant 1)              too few days
+                                 verdict: not yet (0 days, 0 entries)
+  maker, fee 0.0175 (variant 2)  too few days
+                                 verdict: not yet (0 days, 0 entries)
+  maker fill rate 0 of 0
+  daily (taker): 

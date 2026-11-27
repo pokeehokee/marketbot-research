@@ -1,0 +1,69 @@
+VARIANT 2, MAKER: bid at the taker price - 1c, filled only on a trade-through within 120 s; maker fee rate 0.0
+  fill rate, primary cell, train: 329 of 437 = 75%
+  fill rate, primary cell, holdout: 1004 of 1370 = 73%
+7813 entries priced from 3875 events; holdout from 2026-11-03
+median seconds left at entry 540.7271559238434
+PRE-REGISTERED primary: entries, delay 0 (+5 s), all coins, maker, hold to settlement
+  train    n   329 d  36  EV  -2.15c [ -7.21,  +3.38]  win  43.2% at avg 45.3c  x 6.62  per $1  -4.75c
+  holdout  n  1004 d  25  EV  +2.38c [ +0.21,  +4.64]  win  44.7% at avg 42.3c  x 7.38  per $1  +5.62c
+
+== train: 18 cells, selected 0 ==
+  entries            late   0s  n   329 d  36  EV  -2.15c [ -7.21,  +3.38]  win  43.2% at avg 45.3c  x 6.62  per $1  -4.75c
+  entries            late  60s  n   331 d  36  EV  -3.99c [ -9.05,  +0.64]  win  41.1% at avg 45.1c  x 7.72  per $1  -8.85c
+  entries            late 300s  n   330 d  36  EV  -2.94c [ -8.30,  +2.41]  win  43.0% at avg 46.0c  x 5.90  per $1  -6.39c
+  entries >= $250k   late   0s  n   212 d  34  EV  -2.83c [ -8.95,  +3.28]  win  44.8% at avg 47.6c  x 6.98  per $1  -5.93c
+  entries >= $250k   late  60s  n   212 d  34  EV  -3.45c [ -8.78,  +1.31]  win  43.4% at avg 46.8c  x 7.54  per $1  -7.37c
+  entries >= $250k   late 300s  n   208 d  33  EV  -2.42c [ -8.43,  +4.44]  win  43.8% at avg 46.2c  x 5.01  per $1  -5.24c
+  all directional    late   0s  n   585 d  36  EV  -1.65c [ -5.35,  +2.05]  win  43.1% at avg 44.7c  x 7.06  per $1  -3.70c
+  all directional    late  60s  n   589 d  36  EV  -3.49c [ -7.01,  -0.86]  win  41.6% at avg 45.1c  x 7.74  per $1  -7.74c
+  all directional    late 300s  n   588 d  36  EV  -2.33c [ -5.88,  +1.46]  win  42.7% at avg 45.0c  x 6.19  per $1  -5.18c
+  BTC entries        late   0s  n   161 d  31  EV  -1.72c [-10.25,  +5.85]  win  46.6% at avg 48.3c  x 6.04  per $1  -3.56c
+  BTC entries        late  60s  n   154 d  31  EV  -5.16c [-13.33,  +2.03]  win  43.5% at avg 48.7c  x 5.73  per $1 -10.60c
+  BTC entries        late 300s  n   163 d  31  EV  -0.01c [ -7.56,  +7.58]  win  47.2% at avg 47.2c  x 4.17  per $1  -0.01c
+  ETH entries        late   0s  n   120 d  30  EV  +0.21c [ -6.69,  +7.13]  win  43.3% at avg 43.1c  x 7.49  per $1  +0.48c
+  ETH entries        late  60s  n   123 d  28  EV  -1.38c [ -8.99,  +5.24]  win  41.5% at avg 42.8c  x 9.58  per $1  -3.23c
+  ETH entries        late 300s  n   120 d  30  EV  -5.12c [-12.96,  +2.27]  win  39.2% at avg 44.3c  x 7.94  per $1 -11.55c
+  SOL entries        late   0s  n    48 d  18  EV  -9.50c [-20.93,  -0.21]  win  31.2% at avg 40.8c  x 6.37  per $1 -23.31c
+  SOL entries        late  60s  n    54 d  18  EV  -6.59c [-17.89,  +4.18]  win  33.3% at avg 39.9c  x 9.17  per $1 -16.51c
+  SOL entries        late 300s  n    47 d  19  EV  -7.53c [-16.04,  +0.22]  win  38.3% at avg 45.8c  x 6.73  per $1 -16.43c
+-- selected, read on the holdout --
+
+== null: 18 cells, selected 0 ==
+  entries            late   0s  n   340 d  36  EV  -1.31c [ -5.35,  +2.58]  win  50.3% at avg 51.6c  x 6.50  per $1  -2.54c
+  entries            late  60s  n   332 d  36  EV  +0.36c [ -4.07,  +4.70]  win  49.4% at avg 49.0c  x 5.68  per $1  +0.74c
+  entries            late 300s  n   328 d  36  EV  -3.16c [ -9.13,  +1.75]  win  45.7% at avg 48.9c  x 5.72  per $1  -6.45c
+  entries >= $250k   late   0s  n   215 d  35  EV  -0.39c [ -4.94,  +4.26]  win  48.8% at avg 49.2c  x 7.77  per $1  -0.78c
+  entries >= $250k   late  60s  n   216 d  33  EV  +1.13c [ -4.31,  +6.54]  win  49.5% at avg 48.4c  x 6.58  per $1  +2.34c
+  entries >= $250k   late 300s  n   205 d  33  EV  -3.89c [-12.81,  +2.50]  win  45.9% at avg 49.7c  x 5.53  per $1  -7.83c
+  all directional    late   0s  n   603 d  36  EV  -1.67c [ -4.05,  +0.78]  win  48.9% at avg 50.6c  x 6.62  per $1  -3.30c
+  all directional    late  60s  n   593 d  36  EV  -0.51c [ -2.80,  +1.99]  win  48.7% at avg 49.2c  x 6.30  per $1  -1.03c
+  all directional    late 300s  n   583 d  36  EV  -1.79c [ -5.92,  +1.98]  win  47.0% at avg 48.8c  x 5.51  per $1  -3.67c
+  BTC entries        late   0s  n   164 d  31  EV  +0.96c [ -5.04,  +5.55]  win  51.2% at avg 50.3c  x 6.71  per $1  +1.92c
+  BTC entries        late  60s  n   153 d  28  EV  +2.95c [ -3.92,  +9.97]  win  51.0% at avg 48.0c  x 5.13  per $1  +6.15c
+  BTC entries        late 300s  n   168 d  30  EV  -2.37c [-10.91,  +5.17]  win  48.2% at avg 50.6c  x 4.91  per $1  -4.68c
+  ETH entries        late   0s  n   125 d  29  EV  -6.06c [-12.15,  +0.59]  win  47.2% at avg 53.3c  x 6.49  per $1 -11.38c
+  ETH entries        late  60s  n   125 d  31  EV  -3.05c [ -9.09,  +3.33]  win  47.2% at avg 50.2c  x 6.18  per $1  -6.07c
+  ETH entries        late 300s  n   117 d  29  EV  -4.99c [-12.63,  +2.57]  win  41.0% at avg 46.0c  x 7.02  per $1 -10.85c
+  SOL entries        late   0s  n    51 d  16  EV  +3.04c [ -7.28, +14.77]  win  54.9% at avg 51.9c  x 5.81  per $1  +5.86c
+  SOL entries        late  60s  n    54 d  18  EV  +0.91c [ -9.68, +11.25]  win  50.0% at avg 49.1c  x 6.10  per $1  +1.85c
+  SOL entries        late 300s  n    43 d  18  EV  -1.23c [-12.13,  +9.45]  win  48.8% at avg 50.1c  x 5.37  per $1  -2.46c
+
+-- holdout, every cell (context only; only selected cells can pass) --
+  entries            late   0s  n  1004 d  25  EV  +2.38c [ +0.21,  +4.64]  win  44.7% at avg 42.3c  x 7.38  per $1  +5.62c
+  entries            late  60s  n  1045 d  24  EV  +3.20c [ +0.46,  +5.64]  win  45.7% at avg 42.5c  x 7.09  per $1  +7.52c
+  entries            late 300s  n  1064 d  24  EV  +1.37c [ -1.12,  +3.85]  win  48.0% at avg 46.7c  x 5.51  per $1  +2.94c
+  entries >= $250k   late   0s  n   463 d  25  EV  +2.32c [ -0.79,  +5.82]  win  47.5% at avg 45.2c  x 6.45  per $1  +5.13c
+  entries >= $250k   late  60s  n   485 d  24  EV  +2.32c [ -1.25,  +5.87]  win  47.0% at avg 44.7c  x 6.55  per $1  +5.20c
+  entries >= $250k   late 300s  n   497 d  24  EV  +1.22c [ -2.21,  +4.03]  win  48.3% at avg 47.1c  x 6.16  per $1  +2.59c
+  all directional    late   0s  n  1975 d  25  EV  +2.68c [ +0.85,  +4.45]  win  46.1% at avg 43.4c  x 7.12  per $1  +6.17c
+  all directional    late  60s  n  2031 d  24  EV  +2.54c [ +0.90,  +3.99]  win  46.9% at avg 44.4c  x 6.47  per $1  +5.72c
+  all directional    late 300s  n  2045 d  24  EV  +0.12c [ -1.04,  +1.38]  win  47.7% at avg 47.6c  x 5.25  per $1  +0.25c
+  BTC entries        late   0s  n   716 d  25  EV  +2.10c [ -0.85,  +5.21]  win  43.7% at avg 41.6c  x 7.43  per $1  +5.06c
+  BTC entries        late  60s  n   739 d  24  EV  +2.76c [ -0.80,  +6.02]  win  45.1% at avg 42.3c  x 7.26  per $1  +6.54c
+  BTC entries        late 300s  n   742 d  24  EV  +1.16c [ -2.65,  +4.43]  win  47.8% at avg 46.7c  x 5.67  per $1  +2.49c
+  ETH entries        late   0s  n   214 d  24  EV  +2.83c [ -1.39,  +6.39]  win  45.3% at avg 42.5c  x 7.47  per $1  +6.65c
+  ETH entries        late  60s  n   230 d  22  EV  +4.71c [ +0.75,  +8.31]  win  46.5% at avg 41.8c  x 7.93  per $1 +11.27c
+  ETH entries        late 300s  n   240 d  23  EV  +4.24c [ -0.03,  +9.44]  win  51.2% at avg 47.0c  x 5.56  per $1  +9.01c
+  SOL entries        late   0s  n    74 d  18  EV  +3.76c [ -6.63, +12.21]  win  52.7% at avg 48.9c  x 6.64  per $1  +7.68c
+  SOL entries        late  60s  n    76 d  18  EV  +2.87c [ -8.70, +11.48]  win  50.0% at avg 47.1c  x 2.95  per $1  +6.09c
+  SOL entries        late 300s  n    82 d  19  EV  -5.10c [-13.74,  +4.33]  win  40.2% at avg 45.3c  x 3.87  per $1 -11.24c

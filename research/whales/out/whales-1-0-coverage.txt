@@ -1,0 +1,7 @@
+events 1742
+wallets 192 read 192 unread 0
+capped_by_10000_fill_limit 60
+fills_btc_eth_sol 120541
+candles BTC 86577 1790582100 1795776840
+candles ETH 86575 1790582100 1795776900
+candles SOL 86571 1790582100 1795776900

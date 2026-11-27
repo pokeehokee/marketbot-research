@@ -47,6 +47,21 @@ class TestMemeRec(unittest.TestCase):
             m.assert_read_only("/networks/solana/swap")
         m.assert_read_only("/networks/solana/pools/multi/A,B")
 
+    def test_client_stops_at_its_deadline_without_calling(self):
+        import time
+        c = m.Client(log=lambda *x: None)
+        c.deadline = time.time() - 1
+        self.assertIsNone(c.get("/networks/solana/new_pools", {"page": 1}))
+        self.assertEqual(c.n, 0)
+
+    def test_a_killed_run_still_saves_its_state(self):
+        import tempfile, json
+        d = tempfile.mkdtemp()
+        st = os.path.join(d, "state.json")
+        m.save_state(st, {"pools": {"A": {"created": 1, "token": "t", "last": 0}}, "tok": {}})
+        self.assertEqual(json.load(open(st))["pools"]["A"]["token"], "t")
+        self.assertFalse(os.path.exists(st + ".tmp"))
+
 
 if __name__ == "__main__":
     unittest.main()

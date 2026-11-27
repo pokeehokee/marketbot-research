@@ -21,7 +21,7 @@ Rate: GeckoTerminal's free tier is about 30 calls a minute; this stays under BUD
 
 Run:  python3 -I meme_rec.py --state state.json --out dir --minutes 11
 """
-import argparse, gzip, json, os, sys, time, urllib.request, urllib.error
+import argparse, gzip, json, os, signal, sys, time, urllib.request, urllib.error
 from datetime import datetime, timezone
 
 BASE = "https://api.geckoterminal.com/api/v2"
@@ -47,15 +47,21 @@ class Client:
         self.log = log
         self.n = 0
         self.errors = 0
+        self.deadline = None   # past this, get() returns None without calling or sleeping
+
+    def _late(self, extra=0):
+        return self.deadline is not None and time.time() + extra > self.deadline
 
     def get(self, path, params=None):
         assert_read_only(path)
         while True:
+            if self._late():
+                return None
             now = time.time()
             self.calls = [t for t in self.calls if now - t < 60]
             if len(self.calls) < BUDGET:
                 break
-            time.sleep(60 - (now - self.calls[0]) + 0.2)
+            time.sleep(max(0, min(60 - (now - self.calls[0]) + 0.2, (self.deadline or 1e18) - now)))
         q = ("?" + "&".join(f"{k}={v}" for k, v in params.items())) if params else ""
         for attempt in range(4):
             self.calls.append(time.time())
@@ -67,6 +73,8 @@ class Client:
                     return json.loads(r.read())
             except urllib.error.HTTPError as e:
                 if e.code == 429:
+                    if self._late(15 * (attempt + 1)):
+                        return None
                     time.sleep(15 * (attempt + 1))
                     continue
                 if e.code == 404:
@@ -77,6 +85,8 @@ class Client:
             except Exception as e:  # network: back off and retry
                 self.errors += 1
                 self.log(f"error {type(e).__name__} {path}")
+                if self._late(5 * (attempt + 1)):
+                    return None
                 time.sleep(5 * (attempt + 1))
         return None
 
@@ -143,7 +153,28 @@ def universe(p, now):
             and (p["reserve"] or 0) >= 40_000 and (p["vol_m5"] or 0) >= 25_000)
 
 
-def run(a, log=print):
+def _log(*x):
+    print(time.strftime("%H:%M:%S"), *x, flush=True)
+
+
+def _term(signum, frame):
+    raise SystemExit(f"signal {signum}")
+
+
+def save_state(path, state):
+    if path:
+        tmp = path + ".tmp"
+        with open(tmp, "w") as fo:
+            json.dump(state, fo)
+        os.replace(tmp, path)
+
+
+def run(a, log=_log):
+    """A run that is killed (the step's timeout) must still close its gzip files and keep its
+    tracking state: the 12:06Z run of 2026-11-27 was killed at 720 s, printed nothing (stdout was
+    buffered) and saved nothing. So SIGTERM unwinds through the finally below, the state is saved
+    every cycle, logs are flushed, and the client stops calling at the deadline."""
+    signal.signal(signal.SIGTERM, _term)
     c = Client(log)
     state = {"pools": {}, "tok": {}}
     if a.state and os.path.exists(a.state):
@@ -153,6 +184,18 @@ def run(a, log=print):
     pf = gzip.open(os.path.join(a.out, "pools.jsonl.gz"), "at")
     tf = gzip.open(os.path.join(a.out, "tokens.jsonl.gz"), "at")
     end = time.time() + a.minutes * 60
+    c.deadline = end + 30
+    cyc = 0
+    try:
+        loop(a, c, state, pf, tf, end, log)
+    finally:
+        pf.close()
+        tf.close()
+        save_state(a.state, state)
+    log(f"done: {c.n} calls, {c.errors} errors, tracked {len(state['pools'])}")
+
+
+def loop(a, c, state, pf, tf, end, log):
     cyc = 0
     sampled = False
     while time.time() < end:
@@ -164,6 +207,8 @@ def run(a, log=print):
                              + [("/networks/solana/trending_pools",
                                  {"page": p, "duration": dur, "include": "base_token,dex"})
                                 for dur in ("5m", "1h") for p in (1, 2)]):
+            if time.time() > end:
+                break
             r = c.get(path, params)
             for d in (r or {}).get("data") or []:
                 seen.append(pool_row(d, now))
@@ -210,17 +255,12 @@ def run(a, log=print):
                 tf.write(json.dumps(token_row(r, int(time.time()), tok)) + "\n")
                 state["tok"][tok] = now
         state["tok"] = {k: v for k, v in state["tok"].items() if now - v < TRACK_H * 3600}
+        save_state(a.state, state)
         log(f"cycle {cyc}: seen {len(seen)} tracked {len(state['pools'])} snap {len(fresh)} "
             f"calls {c.n} errors {c.errors}")
         nxt = now + 60
         if time.time() < nxt and time.time() + 1 < end:
             time.sleep(max(0, min(nxt, end) - time.time()))
-    pf.close()
-    tf.close()
-    if a.state:
-        with open(a.state, "w") as fo:
-            json.dump(state, fo)
-    log(f"done: {cyc} cycles, {c.n} calls, {c.errors} errors, tracked {len(state['pools'])}")
 
 
 if __name__ == "__main__":

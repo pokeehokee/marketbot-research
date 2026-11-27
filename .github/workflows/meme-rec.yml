@@ -40,7 +40,7 @@ jobs:
         run: python3 -m unittest discover -s research/meme -p 'test_*.py'
       - name: Record
         run: |
-          timeout 720 python3 -I research/meme/meme_rec.py --state research/meme/state.json \
+          timeout 750 python3 -I research/meme/meme_rec.py --state research/meme/state.json \
             --out "rec/${{ steps.n.outputs.name }}" --minutes 11
       - name: Save tracking state
         if: always()

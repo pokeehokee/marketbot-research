@@ -1,0 +1,5 @@
+# Editing this file on main dispatches the precursor screen (.github/workflows/alpha-precursor.yml).
+# Fields: days budget tag. Change the tag for a new study: a tag's holdout is used once.
+days=28
+budget=300
+tag=alpha-1

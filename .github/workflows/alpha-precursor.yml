@@ -1,0 +1,130 @@
+name: Alpha precursor screen (public research repo)
+
+# Does anything the public trade tape showed before time t predict, beyond the price,
+# how a Kalshi market settled or where its price went next? research/alpha/screen.py
+# has the method. Read-only and unauthenticated: no secret is referenced in this file.
+# Pull shards resume from their cached databases. Scoring runs only once every shard is
+# fully read, so a tag's holdout is looked at exactly once, on complete data: the train
+# phase commits its selection first, and the holdout phase reads only that commit.
+on:
+  push:
+    branches: ["main"]
+    paths: ["research/alpha/ALPHA"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: alpha-precursor
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: btcd
+            sample: 6
+            series: KXBTCD
+          - shard: crypto
+            sample: 1
+            series: KXBTC15M,KXETH15M,KXSOL15M,KXETHD
+          - shard: fin
+            sample: 1
+            series: KXINXU,KXNASDAQ100U,KXEURUSD15M,KXUSDJPY15M,KXWTI15M,KXGOLD15M,KXWTIH,KXGOLDH
+          - shard: weather
+            sample: 1
+            series: KXHIGHNY,KXHIGHCHI,KXHIGHMIA,KXHIGHLAX,KXHIGHAUS,KXHIGHDEN,KXHIGHPHIL
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read parameters
+        id: p
+        run: grep -E '^(days|budget|tag)=' research/alpha/ALPHA >> "$GITHUB_OUTPUT"
+      - name: Restore this shard's database (resume)
+        uses: actions/cache/restore@v4
+        with:
+          path: research/alpha/alpha_${{ steps.p.outputs.tag }}-${{ matrix.shard }}.db
+          key: alpha-${{ steps.p.outputs.tag }}-${{ matrix.shard }}-${{ github.run_id }}
+          restore-keys: alpha-${{ steps.p.outputs.tag }}-${{ matrix.shard }}-
+      - name: Tests
+        run: |
+          python3 -m unittest discover -s research/alpha -p 'test_*.py'
+          python3 -m unittest discover -s research/discovery -p 'test_ladder_tape.py'
+      - name: Read the tape
+        run: |
+          set -o pipefail
+          timeout $(( ${{ steps.p.outputs.budget }} * 60 + 900 )) \
+            python3 -I research/alpha/precursor.py --series "${{ matrix.series }}" \
+              --sample ${{ matrix.sample }} --days ${{ steps.p.outputs.days }} \
+              --budget-min ${{ steps.p.outputs.budget }} --tag "${{ steps.p.outputs.tag }}-${{ matrix.shard }}" \
+            | tee research/alpha/out/${{ steps.p.outputs.tag }}-${{ matrix.shard }}.log
+      - name: Export
+        if: always()
+        run: |
+          python3 -I research/alpha/precursor.py --tag "${{ steps.p.outputs.tag }}-${{ matrix.shard }}" \
+            --export research/alpha/out/${{ steps.p.outputs.tag }}-${{ matrix.shard }}.csv.gz
+      - name: Save this shard's database
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: research/alpha/alpha_${{ steps.p.outputs.tag }}-${{ matrix.shard }}.db
+          key: alpha-${{ steps.p.outputs.tag }}-${{ matrix.shard }}-${{ github.run_id }}
+      - name: Commit this shard's rows
+        if: always()
+        run: |
+          git config user.name "alpha-screen"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/alpha/out
+          git commit -m "alpha precursor rows: ${{ steps.p.outputs.tag }} ${{ matrix.shard }}" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep $((i * 7)); done
+
+  score:
+    needs: pull
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - name: Read parameters
+        id: p
+        run: grep -E '^(tag)=' research/alpha/ALPHA >> "$GITHUB_OUTPUT"
+      - name: Is every shard fully read?
+        id: c
+        run: |
+          git pull origin "${GITHUB_REF_NAME}"
+          t=${{ steps.p.outputs.tag }}
+          unread=$(cat research/alpha/out/$t-*-coverage.txt | awk '$1 ~ /^KX/ {s += $5} END {print s+0}')
+          echo "unread=$unread" >> "$GITHUB_OUTPUT"
+          echo "unread sampled markets: $unread"
+      - name: Train phase (holdout not loaded)
+        if: steps.c.outputs.unread == '0' && hashFiles(format('research/alpha/out/{0}-selected.json', steps.p.outputs.tag)) == ''
+        run: |
+          python3 -I research/alpha/screen.py --phase train --tag ${{ steps.p.outputs.tag }} \
+            research/alpha/out/${{ steps.p.outputs.tag }}-*.csv.gz
+          cat research/alpha/out/${{ steps.p.outputs.tag }}-train.txt >> "$GITHUB_STEP_SUMMARY"
+          git config user.name "alpha-screen"
+          git config user.email "actions@users.noreply.github.com"
+          git add research/alpha/out
+          git commit -m "alpha precursor train selection: ${{ steps.p.outputs.tag }} (holdout sealed)"
+          for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep $((i * 7)); done
+      - name: Holdout phase (reads only the committed selection)
+        if: steps.c.outputs.unread == '0' && hashFiles(format('research/alpha/out/{0}-holdout.txt', steps.p.outputs.tag)) == ''
+        run: |
+          git config user.name "alpha-screen"
+          git config user.email "actions@users.noreply.github.com"
+          git pull origin "${GITHUB_REF_NAME}"
+          python3 -I research/alpha/screen.py --phase holdout --tag ${{ steps.p.outputs.tag }} \
+            research/alpha/out/${{ steps.p.outputs.tag }}-*.csv.gz
+          cat research/alpha/out/${{ steps.p.outputs.tag }}-holdout.txt >> "$GITHUB_STEP_SUMMARY"
+          git add research/alpha/out
+          git commit -m "alpha precursor holdout: ${{ steps.p.outputs.tag }}" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && break; sleep $((i * 7)); done
+      - name: Not complete yet
+        if: steps.c.outputs.unread != '0'
+        run: echo "Some shards are not fully read; re-dispatch to resume. Nothing scored, holdout untouched." >> "$GITHUB_STEP_SUMMARY"

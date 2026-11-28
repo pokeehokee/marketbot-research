@@ -20,7 +20,8 @@ OURS = {"KXBTCD", "KXBTC", "KXBTC15M", "KXETH15M", "KXSOL15M", "KXXRP15M", "KXET
         "KXBRENTD", "KXBRENTW", "KXWTI", "KXWTIW", "KXNATGASD", "KXNATGASW", "KXGOLDD", "KXGOLDW",
         "KXSILVERD", "KXSILVERW", "KXCOPPERD", "KXCOPPERW", "KXEPLGAME", "KXUCLGAME", "KXLALIGAGAME",
         "KXSERIEAGAME", "KXBUNDESLIGAGAME", "KXLIGUE1GAME", "KXMLSGAME", "KXNBAGAME", "KXNFLGAME",
-        "KXNHLGAME", "KXNCAAFGAME", "KXNCAAMBGAME", "KXAAAGASD", "KXAAAGASW", "KXAAAGASM"}
+        "KXNHLGAME", "KXNCAAFGAME", "KXNCAAMBGAME", "KXAAAGASD", "KXAAAGASW", "KXAAAGASM",
+        "KXTEMPNYCHS", "KXTEMPMIAH", "KXTEMPCHIHS", "KXTEMPLAXHS"}
 PAGE_CAP = 400
 
 
@@ -101,6 +102,9 @@ def main(argv=None):
         hl = [r for r in live if r.get("series_ticker") in OURS]
         log(f"  records on one of our exact series: {len(hits)} ever, {len(hl)} live; by series "
             f"{dict(collections.Counter(r.get('series_ticker') for r in hits))}")
+        near = collections.Counter(r.get("series_ticker") for r in live
+                                   if any(k in str(r.get("series_ticker")) for k in ("GAME", "KXTEMP", "KXBTC")))
+        log(f"  live records on any GAME / KXTEMP / KXBTC series: {dict(near.most_common(40))}")
         for r in hl[:40]:
             log("    " + json.dumps(r)[:600])
         with gzip.open(os.path.join(OUT, f"incentives-{a.tag}{path.replace('/', '-')}.json.gz"), "wt") as g:
